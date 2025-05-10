@@ -99,7 +99,5 @@ if st.session_state.step == 3:
         st.session_state.current_set = 1
     
     st.session_state.current_set = 1
-    st.session_state.df = pd.DataFrame(columns=["score", "point_type", "player", "attack_zone", "serve_zone", "defense_zone", "block_zone", "out_zone", "our_score", "opp_score"])
-    st.session_state.df.loc[0] = ["", "", "", "", "", "", "", "", 0, 0]
-
+    
     start_game()
