@@ -19,29 +19,29 @@ if 'step' not in st.session_state:
     st.session_state.step = 0
 
 if 'point_att' not in st.session_state:
-    st.session_state.point_att = ""
+    st.session_state.point_att = '0'
 
 if 'point_def' not in st.session_state:
-    st.session_state.point_def = ""
+    st.session_state.point_def = '0'
 
 if 'point_block' not in st.session_state:
-    st.session_state.point_block = ""
+    st.session_state.point_block = '0'
 
 def click_step(i):
     st.session_state.step = i
 
 def click_att(i):
     st.session_state.point_att = i  # `i` è già una stringa (es. 'att-1')
-    st.session_state.point_block = 0 
+    st.session_state.point_block = '0'
 
 def click_def(i):
     st.session_state.point_def = i  # `i` è già una stringa (es. 'def-1')
-    st.session_state.point_block = 0  # Reset come stringa vuota
+    st.session_state.point_block = '0'  # Reset come stringa vuota
 
 def click_block(i):
     st.session_state.point_block = i  # `i` è già una stringa (es. 'block-1')
-    st.session_state.point_def = 0  # Reset come stringa vuota
-    st.session_state.point_att = 0
+    st.session_state.point_def = '0'  # Reset come stringa vuota
+    st.session_state.point_att = '0'
 
 def return_set_page():
     st.session_state.current_row += 1  # Passa alla riga successiva
@@ -92,19 +92,19 @@ if st.session_state.step == 0:
 
 if st.session_state.step == 1:
 
-    if st.session_state.point_block !=0:
+    if st.session_state.point_block != '0':
         st.info(f"You selected: error in block {st.session_state.point_block}.\n\nDo you want to save the action?")
         back = st.button("Back", key="oback", on_click=click_step, args=[0])
         save = st.button("Save", key="osave", on_click=click_step, args = [2])
 
         
-    elif st.session_state.point_att != 0 and st.session_state.point_def !=0:
+    elif st.session_state.point_att != '0' and st.session_state.point_def != '0':
         st.info(f"You selected: error in zone {st.session_state.point_def} from zone {st.session_state.point_att}.\n\nDo you want to save the action?")
         back = st.button("Back", key="oback", on_click=click_step, args=[0])
         save = st.button("Save", key="osave", on_click=click_step, args = [2])
 
     
-    elif (st.session_state.point_att == 0 and st.session_state.point_def != 0 ) or (st.session_state.point_att != 0 and st.session_state.point_def == 0 ) or (st.session_state.point_att == 0 and st.session_state.point_def == 0 and st.session_state.point_block == 0):
+    elif (st.session_state.point_att == '0' and st.session_state.point_def != '0' ) or (st.session_state.point_att != '0' and st.session_state.point_def == '0' ) or (st.session_state.point_att == '0' and st.session_state.point_def == '0' and st.session_state.point_block == '0'):
         st.warning("Please go back. You are missing the point selection!")
         back = st.button("Back", key="oback", on_click=click_step, args=[0])
         
@@ -123,9 +123,9 @@ if st.session_state.step == 2:
         st.session_state.df.loc[st.session_state.current_row, "block_zone"] = st.session_state.point_block
 
     # Reset delle variabili
-    st.session_state.point_att = 0
-    st.session_state.point_def = 0
-    st.session_state.point_block = 0
+    st.session_state.point_att = '0'
+    st.session_state.point_def = '0'
+    st.session_state.point_block = '0'
 
     # Passa alla riga successiva
     st.session_state.current_row += 1

@@ -17,10 +17,10 @@ if 'step' not in st.session_state:
     st.session_state.step = 0
 
 if 'point_att' not in st.session_state:
-    st.session_state.point_att = 0
+    st.session_state.point_att = '0'
 
 if 'point_def' not in st.session_state:
-    st.session_state.point_def = 0
+    st.session_state.point_def = '0'
 
 
 def click_step(i):
@@ -87,13 +87,13 @@ if st.session_state.step == 0:
 
 if st.session_state.step == 1:
 
-    if st.session_state.point_att != 0 and st.session_state.point_def !=0:
+    if st.session_state.point_att != '0' and st.session_state.point_def !='0':
         st.info(f"You selected: error in {st.session_state.point_def} from {st.session_state.point_att} .\n\nDo you want to save the action?")
         back = st.button("Back", key="eback", on_click=click_step, args=[0])
         save = st.button("Save", key="esave", on_click=click_step, args = [2])
 
     
-    elif (st.session_state.point_att==0) or (st.session_state.point_def==0):
+    elif (st.session_state.point_att== '0') or (st.session_state.point_def== '0'):
         st.warning("Please go back. You are missing the point selection!")
         back = st.button("Back", key="eback", on_click=click_step, args=[0])
         
@@ -111,8 +111,8 @@ if st.session_state.step == 2:
         st.session_state.df.loc[st.session_state.current_row, "out_zone"] = st.session_state.point_def
 
     # Reset delle variabili
-    st.session_state.point_att = 0
-    st.session_state.point_def = 0
+    st.session_state.point_att = '0'
+    st.session_state.point_def = '0'
 
     # Passa alla riga successiva
     st.session_state.current_row += 1
