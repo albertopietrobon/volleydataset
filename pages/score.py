@@ -3,7 +3,6 @@ import pandas as pd
 import io   # per scaricare il file excel
 
 # SCELTA PUNTO GUADAGNATO O PERSO E SALVATAGGIO FILE EXCEL
-
 st.subheader("What happened?")
 
 if st.button("Point scored"):
@@ -50,25 +49,26 @@ if st.button("Point lost"):
 
 # Aggiungi un pulsante "Next Set"
 st.subheader("Start the next set")
+
 if st.button("Next Set"):
     # Incrementa il numero del set corrente
-    if "current_set" not in st.session_state:
-        st.session_state.current_set = 1  # Inizializza il primo set
-    else:
-        st.session_state.current_set += 1
+    #if "current_set" not in st.session_state:
+        #st.session_state.current_set = 1  # Inizializza il primo set
+    #else:
+    st.session_state.current_set += 1
 
     # Salva il foglio corrente nel file Excel
     file_name = f"Match_{st.session_state.date_str}.xlsx"
     try:
         with pd.ExcelWriter(file_name, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
             # Salva tutte le colonne del DataFrame nel foglio corrente
-            st.session_state.df.to_excel(writer, index=False, sheet_name=f"Set {st.session_state.current_set - 1}")
-        st.success(f"Set {st.session_state.current_set - 1} salvato nel file Excel: {file_name}")
+            st.session_state.df.to_excel(writer, index=False, sheet_name=f"Set {st.session_state.current_set-1}") 
+        st.success(f"Set {st.session_state.current_set-1} salvato nel file Excel: {file_name}")
     except Exception as e:
         st.error(f"Errore durante il salvataggio del file Excel: {e}")
 
     # Azzera il DataFrame per il nuovo set, con punteggi iniziali a zero
-    st.session_state.df = pd.DataFrame(columns=["score", "point_type", "player", "attack_zone", "defense_zone", "block_zone", "serve_zone", "out_zone", "our_score", "opp_score"])
+    st.session_state.df = pd.DataFrame(columns=["score", "point_type", "player", "attack_zone", "serve_zone", "defense_zone", "block_zone", "out_zone", "our_score", "opp_score"])
     st.session_state.df.loc[0] = ["", "", "", "", "", "", "", "", 0, 0]
 
     st.info(f"Pronto per il Set {st.session_state.current_set}!")
