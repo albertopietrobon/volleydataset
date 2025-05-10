@@ -53,27 +53,27 @@ if st.session_state.step == 0:
         eb2 = st.button("out", key="ebutt2", on_click=click_def,args=['out-1'], use_container_width=True)
         eb3 = st.button("1", key="ebutt3", use_container_width=True)
         eb4 = st.button("2", key="ebutt4", use_container_width=True)
-        eb5 = st.button("block/net", key="ebutt5", on_click=click_def,args=['block/net-2'], use_container_width=True)
-        eb6 = st.button("4", key="ebutt6", on_click=click_att,args=['att-4'], use_container_width=True)
-        eb7 = st.button("5", key="ebutt7", on_click=click_att,args=['att-5'], use_container_width=True)
+        eb5 = st.button("block/net", key="ebutt5", on_click=click_def,args=[2], use_container_width=True)
+        eb6 = st.button("4", key="ebutt6", on_click=click_att,args=[4], use_container_width=True)
+        eb7 = st.button("5", key="ebutt7", on_click=click_att,args=[5], use_container_width=True)
         eb8 = st.button("serve", key="ebutt8", on_click=click_att,args=['serve-5'], use_container_width=True)
 
     with col3:
         eb9 = st.button("out", key="ebutt9", on_click=click_def,args=['out-6'], use_container_width=True)
         eb10 = st.button("1", key="ebutt10", use_container_width=True)
         eb11 = st.button("2", key="ebutt11", use_container_width=True)
-        eb12 = st.button("block/net", key="ebutt12", on_click=click_def,args=['block/net-3'], use_container_width=True)
-        eb13 = st.button("4", key="ebutt13", on_click=click_att,args=['att-3'], use_container_width=True)
-        eb14 = st.button("5", key="ebutt14", on_click=click_att,args=['att-6'], use_container_width=True)
+        eb12 = st.button("block/net", key="ebutt12", on_click=click_def,args=[3], use_container_width=True)
+        eb13 = st.button("4", key="ebutt13", on_click=click_att,args=[3], use_container_width=True)
+        eb14 = st.button("5", key="ebutt14", on_click=click_att,args=[6], use_container_width=True)
         eb15 = st.button("serve", key="ebutt15", on_click=click_att,args=['serve-6'], use_container_width=True)
 
     with col4:
         eb16 = st.button("out", key="ebutt16", on_click=click_def,args=['out-5'], use_container_width=True)
         eb17 = st.button("1", key="ebutt17", use_container_width=True)
         eb18 = st.button("2", key="ebutt18", use_container_width=True)
-        eb19 = st.button("block/net", key="ebutt19", on_click=click_def,args=['block/net-4'], use_container_width=True)
-        eb20 = st.button("4", key="ebutt20", on_click=click_att,args=['att-2'], use_container_width=True)
-        eb21 = st.button("5", key="ebutt21", on_click=click_att,args=['att-1'], use_container_width=True)
+        eb19 = st.button("block/net", key="ebutt19", on_click=click_def,args=[4], use_container_width=True)
+        eb20 = st.button("4", key="ebutt20", on_click=click_att,args=[2], use_container_width=True)
+        eb21 = st.button("5", key="ebutt21", on_click=click_att,args=[1], use_container_width=True)
         eb22 = st.button("serve", key="ebutt22", on_click=click_att,args=['serve-1'], use_container_width=True)
     
     with col5:
