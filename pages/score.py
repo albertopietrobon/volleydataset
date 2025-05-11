@@ -151,10 +151,10 @@ if st.button("Next Set"):
             st.session_state.point_lost = 0
             st.session_state.current_row = 0
         
-            st.session_state.n_set += 1
-        
-        else:
-            st.error("Reached maximum number of sets!")
+        st.session_state.n_set += 1
+        st.rerun()
+    else:
+        st.error("Reached maximum number of sets!")
         
     
 
@@ -169,7 +169,7 @@ if st.button("Save Game Report"):
     
     #salva tutti i set sul file excel
     try:
-        with pd.ExcelWriter(file_name, engine='openpyxl', mode='w', if_sheet_exists='overlay') as writer:
+        with pd.ExcelWriter(file_name, engine='openpyxl', mode='w') as writer:
             
             st.session_state.info_df.to_excel(writer, index=False, sheet_name="Info")
             st.session_state.set1.to_excel(writer, index=False, sheet_name="Set 1")
@@ -179,7 +179,7 @@ if st.button("Save Game Report"):
             st.session_state.set5.to_excel(writer, index=False, sheet_name="Set 5")
             
     
-        st.success(f"Set {st.session_state.current_set} e commenti salvati nel file Excel: {file_name}")
+        st.success(f"Game salvato nel file Excel: {file_name}")
     except Exception as e:
         st.error(f"Errore durante il salvataggio del file Excel: {e}")
     
