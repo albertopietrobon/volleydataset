@@ -25,6 +25,7 @@ if new_game:
     })
 
     st.session_state.current_row = 0
+    st.session_state.n_set = 1
 
     st.session_state.set1 = pd.DataFrame()
     st.session_state.set2 = pd.DataFrame()

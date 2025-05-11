@@ -87,4 +87,6 @@ team = {
 if "roster" not in st.session_state:
     st.session_state.roster = team
 
+if "n_set" not in st.session_state:
+    st.session_state.n_set = 1
 pg.run()

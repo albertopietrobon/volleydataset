@@ -37,6 +37,11 @@ if st.button("Delete last point"):
 
     if st.session_state.current_row != 0 :
 
+        if st.session_state.df.loc[st.session_state.current_row-1,"score"] == "S":
+            st.session_state.point_scored = st.session_state.point_scored - 1
+        elif st.session_state.df.loc[st.session_state.current_row-1,"score"] == "L":
+            st.session_state.point_lost = st.session_state.point_lost - 1
+
         st.session_state.df.loc[st.session_state.current_row-1,"score"]= None
         st.session_state.df.loc[st.session_state.current_row-1,"point_type"]= None
         st.session_state.df.loc[st.session_state.current_row-1,"player"]= None
@@ -49,16 +54,18 @@ if st.button("Delete last point"):
         st.session_state.df.loc[st.session_state.current_row-1,"opp_score"]= None
 
         st.session_state.current_row = st.session_state.current_row -1
+        st.rerun()
         
 #show df
 st.dataframe(st.session_state.df)
+st.write(st.session_state.n_set)
 # Aggiungi un pulsante "Next Set"
 st.subheader("Start the next set")
 
 #passa al prossimo set
 if st.button("Next Set"):
     
-    if st.session_state.n_set <=5:
+    if st.session_state.n_set <=4:
 
         if st.session_state.n_set == 1 :
 
@@ -79,7 +86,6 @@ if st.button("Next Set"):
 
             st.session_state.point_scored = 0
             st.session_state.point_lost = 0
-            st.session_state.n_set = 2
             st.session_state.current_row = 0
         
         if st.session_state.n_set == 2 :
@@ -101,7 +107,6 @@ if st.button("Next Set"):
 
             st.session_state.point_scored = 0
             st.session_state.point_lost = 0
-            st.session_state.n_set = 3
             st.session_state.current_row = 0
 
         if st.session_state.n_set == 3 :
@@ -123,7 +128,6 @@ if st.button("Next Set"):
 
             st.session_state.point_scored = 0
             st.session_state.point_lost = 0
-            st.session_state.n_set = 4
             st.session_state.current_row = 0
 
         if st.session_state.n_set == 4 :
@@ -145,29 +149,9 @@ if st.button("Next Set"):
 
             st.session_state.point_scored = 0
             st.session_state.point_lost = 0
-            st.session_state.n_set = 5
             st.session_state.current_row = 0
         
-        if st.session_state.n_set == 5 :
-
-            st.session_state.set5 = st.session_state.df
-
-            st.session_state.df = pd.DataFrame({
-                "score": [None],
-                "point_type": [None],
-                "player": [None],
-                "attack_zone": [None],
-                "serve_zone": [None],
-                "defense_zone": [None],
-                "block_zone": [None],
-                "out_zone": [None],
-                "our_score": [None],  # Inizializza con 0
-                "opp_score": [None],  # Inizializza con 0
-            })
-
-            st.session_state.point_scored = 0
-            st.session_state.point_lost = 0
-            st.session_state.current_row = 0
+            st.session_state.n_set += 1
         
         else:
             st.error("Reached maximum number of sets!")
@@ -176,7 +160,11 @@ if st.button("Next Set"):
 
 
 if st.button("Save Game Report"):
-   
+    
+    if st.session_state.n_set == 5:
+        st.session_state.set5 = st.session_state.df
+    
+
     file_name = f"Match_{st.session_state.date_str}.xlsx"
     
     #salva tutti i set sul file excel
