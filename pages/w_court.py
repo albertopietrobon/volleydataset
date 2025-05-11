@@ -42,8 +42,6 @@ def click_block(i):
     st.session_state.point_def = '0'
 
 def return_set_page():
-    st.session_state.current_row += 1  # Passa alla riga successiva
-    st.success(f"Moved to the next row: {st.session_state.current_row + 1}")
     st.session_state.step = 0
     st.switch_page("pages/score.py")
     
@@ -61,7 +59,7 @@ if st.session_state.step == 0:
         b4 = st.button("block", key="butt4", on_click=click_block,args=['block_4'], use_container_width=True)
         b5 = st.button("5", key="butt5", on_click=click_att,args=['att_4'], use_container_width=True)
         b6 = st.button("6", key="butt6", on_click=click_att,args=['att_5'], use_container_width=True)
-        b7 = st.button("serve", key="butt7", on_click=click_att,args=['serve-5'], use_container_width=True)
+        b7 = st.button("serve", key="butt7", on_click=click_att,args=['serve_5'], use_container_width=True)
 
     with col2:
         b8 = st.button("8", key="butt8", on_click=click_def,args=['def_6'], use_container_width=True)
@@ -70,7 +68,7 @@ if st.session_state.step == 0:
         b11 = st.button("block", key="butt11", on_click=click_block,args=['block_3'], use_container_width=True)
         b12 = st.button("12", key="butt12", on_click=click_att,args=['att_3'], use_container_width=True)
         b13 = st.button("13", key="butt13", on_click=click_att,args=['att_6'], use_container_width=True)
-        b14 = st.button("serve", key="butt14", on_click=click_att,args=['serve-6'], use_container_width=True)
+        b14 = st.button("serve", key="butt14", on_click=click_att,args=['serve_6'], use_container_width=True)
 
     with col3:
         b15 = st.button("15", key="butt15", on_click=click_def,args=['def_5'], use_container_width=True)
@@ -79,25 +77,31 @@ if st.session_state.step == 0:
         b18 = st.button("block", key=f"butt18", on_click=click_block,args=['block_2'], use_container_width=True)
         b19 = st.button("19", key="butt19", on_click=click_att,args=['att_2'], use_container_width=True)
         b20 = st.button("20", key="butt20", on_click=click_att,args=['att_1'], use_container_width=True)
-        b21 = st.button("serve", key=f"butt21", on_click=click_att,args=['serve-1'], use_container_width=True)
+        b21 = st.button("serve", key=f"butt21", on_click=click_att,args=['serve_1'], use_container_width=True)
 
 
     confirm = st.button("Confirm point", key="confirm", on_click=click_step, args=[1])
 
     st.subheader("Go to the initial page")
+
     if st.button("Back"):
+
+        st.session_state.point_scored = st.session_state.point_scored - 1
+
         st.switch_page("pages/score.py")
     
+
+
 if st.session_state.step == 1:
 
     if st.session_state.point_block != '0':
-        st.info(f"You selected: point on block {st.session_state.point_block}.\nDo you want to save the action?")
+        st.info(f"You selected: point on {st.session_state.point_block} ({st.session_state.player_selected}).\n\nDo you want to save the action?")
         back = st.button("Back", key="back", on_click=click_step, args=[0])
         save = st.button("Save", key="save", on_click=click_step, args = [2])
 
         
     elif st.session_state.point_att != '0' and st.session_state.point_def != '0':
-        st.info(f"You selected: point from zone {st.session_state.point_att} to zone {st.session_state.point_def}.\nDo you want to save the action?")
+        st.info(f"You selected: point from {st.session_state.point_att} to {st.session_state.point_def} ({st.session_state.player_selected}).\n\nDo you want to save the action?")
         back = st.button("Back", key="back", on_click=click_step, args=[0])
         save = st.button("Save", key="save", on_click=click_step, args = [2])
 
@@ -107,17 +111,34 @@ if st.session_state.step == 1:
         back = st.button("Back", key="back", on_click=click_step, args=[0])
         
 if st.session_state.step == 2:
+
+    st.session_state.df.loc[st.session_state.current_row,"score"]="S"
+    st.session_state.df.loc[st.session_state.current_row,"point_type"]="team point"
+    st.session_state.df.loc[st.session_state.current_row,"player"]= st.session_state.player_selected
+    st.session_state.df.loc[st.session_state.current_row,"out_zone"]= None
+    st.session_state.df.loc[st.session_state.current_row,"our_score"]= st.session_state.point_scored
+    st.session_state.df.loc[st.session_state.current_row,"opp_score"]= st.session_state.point_lost
+    
     # Metodo per salvare le zone del campo sulla stessa riga dell'excel
     if 'att' in st.session_state.point_att:
         st.session_state.df.loc[st.session_state.current_row, "attack_zone"] = st.session_state.point_att
-    elif 'serve' in st.session_state.point_att:
+    else:
+        st.session_state.df.loc[st.session_state.current_row, "attack_zone"] = None
+
+    if 'serve' in st.session_state.point_att:
         st.session_state.df.loc[st.session_state.current_row, "serve_zone"] = st.session_state.point_att
+    else:
+        st.session_state.df.loc[st.session_state.current_row, "serve_zone"] = None
 
     if 'def' in st.session_state.point_def:
         st.session_state.df.loc[st.session_state.current_row, "defense_zone"] = st.session_state.point_def
+    else:
+        st.session_state.df.loc[st.session_state.current_row, "defense_zone"] = None
 
     if 'block' in st.session_state.point_block:
         st.session_state.df.loc[st.session_state.current_row, "block_zone"] = st.session_state.point_block
+    else:
+        st.session_state.df.loc[st.session_state.current_row, "block_zone"] = None
 
     # Reset delle variabili
     st.session_state.point_att = '0'

@@ -16,20 +16,35 @@ pg = st.navigation([start_page, data_page, score_page, w_point_type_page, l_poin
 st.set_page_config(page_title='Volleyball report app DV4S', initial_sidebar_state='collapsed')
 
 # Inizializza tutti i "session state"
-    
+
+if "info_df" not in st.session_state:
+    st.session_state.info_df = pd.DataFrame()
+
+
 if "df" not in st.session_state:
     st.session_state.df = pd.DataFrame({
         "score": [None],
         "point_type": [None],
         "player": [None],
         "attack_zone": [None],
+        "serve_zone": [None],
         "defense_zone": [None],
         "block_zone": [None],
-        "serve_zone": [None],
         "out_zone": [None],
-        "our_score": [0],  # Inizializza con 0
-        "opp_score": [0],  # Inizializza con 0
+        "our_score": [None],  # Inizializza con 0
+        "opp_score": [None],  # Inizializza con 0
     })
+
+if "set1" not in st.session_state:
+    st.session_state.set1 = pd.DataFrame()
+if "set2" not in st.session_state:
+    st.session_state.set2 = pd.DataFrame()
+if "set3" not in st.session_state:
+    st.session_state.set3 = pd.DataFrame()
+if "set4" not in st.session_state:
+    st.session_state.set4 = pd.DataFrame()
+if "set5" not in st.session_state:
+    st.session_state.set5 = pd.DataFrame()
 
 if "current_row" not in st.session_state:
     st.session_state.current_row = 0  # Indice della riga corrente
@@ -40,7 +55,7 @@ if "match_date" not in st.session_state:
 if "date_str" not in st.session_state:
     st.session_state.date_str = None
 
-if "team name" not in st.session_state:
+if "team_name" not in st.session_state:
     st.session_state.team_name = 'Numia Vero Volley Milano'
 
 if "opp_teams" not in st.session_state:

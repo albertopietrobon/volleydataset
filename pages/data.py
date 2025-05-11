@@ -3,7 +3,6 @@ import pandas as pd
 from openpyxl import Workbook
 
 #ATTENZIONE: CAMBIARE NUMERO DI GIOCATORI DEL ROSTER
-
 # PAGINA INIZIALE, SCELTA DI DATA, OPPONENT E ROSTER
 
 if 'step' not in st.session_state:
@@ -66,38 +65,12 @@ if st.session_state.step == 2:
 if st.session_state.step == 3:
     # Formatta la data come stringa (es. "13-04-2025") e salvala in session_state
     if st.session_state.match_date:
-        st.session_state.date_str = st.session_state.match_date.strftime("%d-%m-%Y")
+        st.session_state.date_str = st.session_state.match_date.strftime("%Y-%m-%d")
     
-    # 2 POSSIBILI METODI PER SALVARE I DATI NEL FILE EXCEL (UNO DEI DUE È COMMENTATO)
-    # Metodo 1: colonna con tutti i player
-    # Creazione foglio excel e salvataggio del roster
-    # Creazione del DataFrame per il foglio "Roster"
-    info_df = pd.DataFrame({
+    st.session_state.info_df = pd.DataFrame({
         "Players": st.session_state.game_roster,
         "Data": [st.session_state.match_date] * len(st.session_state.game_roster),
         "Opponent": [st.session_state.game_opp] * len(st.session_state.game_roster)
     })
-    file_name = f"Match_{st.session_state.date_str}.xlsx"
-    with pd.ExcelWriter(file_name, engine='openpyxl', mode='w') as writer:
-        info_df.to_excel(writer, index=False, sheet_name="Info")
-
-    # Metodo 2: una colonna per ogni player
-    # Creazione di un nuovo workbook e selezione del foglio attivo
-    #wb = Workbook()
-    #ws = wb.active
-    #ws.title = "Info"
-    # Aggiunta delle intestazioni
-    #ws.append(["Data", "Opponent"] + [f"Player {i+1}" for i in range(len(st.session_state.game_roster))])
-    # Aggiunta dei dati in una sola riga
-    #row = [st.session_state.match_date, st.session_state.game_opp] + st.session_state.game_roster
-    #ws.append(row)
-    # Salvataggio del file Excel
-    #file_name = f"Match_{st.session_state.date_str}.xlsx"
-    #wb.save(file_name)
-    
-    if 'current_set' not in st.session_state:
-        st.session_state.current_set = 1
-    
-    st.session_state.current_set = 1
     
     start_game()

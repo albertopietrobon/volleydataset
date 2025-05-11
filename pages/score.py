@@ -2,119 +2,218 @@ import streamlit as st
 import pandas as pd
 import io   # per scaricare il file excel
 
-# SCELTA PUNTO GUADAGNATO O PERSO E SALVATAGGIO FILE EXCEL
-st.subheader("What happened?")
+if "point_scored" not in st.session_state:
+    st.session_state.point_scored = 0
 
+if "point_lost" not in st.session_state:
+    st.session_state.point_lost = 0
+
+if "n_set" not in st.session_state:
+    st.session_state.n_set = 1
+
+
+# SCELTA PUNTO GUADAGNATO O PERSO E SALVATAGGIO FILE EXCEL
+st.write(f"SET {st.session_state.n_set}")
+st.write(f"{st.session_state.point_scored} - {st.session_state.point_lost}")
+
+
+
+#punto fatto
 if st.button("Point scored"):
-    st.session_state.df.loc[st.session_state.current_row, "score"] = "Point scored"
-    
-    # Verifica che la riga precedente esista e aggiorna i punteggi
-    if st.session_state.current_row > 0 and st.session_state.current_row - 1 in st.session_state.df.index:
-        st.session_state.df.loc[st.session_state.current_row, "our_score"] = (
-            st.session_state.df.loc[st.session_state.current_row - 1, "our_score"] + 1
-        )
-        st.session_state.df.loc[st.session_state.current_row, "opp_score"] = (
-            st.session_state.df.loc[st.session_state.current_row - 1, "opp_score"]
-        )
-    else:
-        # Usa i valori esistenti se disponibili, altrimenti inizializza
-        st.session_state.df.loc[st.session_state.current_row, "our_score"] = (
-            st.session_state.df["our_score"].max() + 1 if "our_score" in st.session_state.df.columns else 1
-        )
-        st.session_state.df.loc[st.session_state.current_row, "opp_score"] = (
-            st.session_state.df["opp_score"].max() if "opp_score" in st.session_state.df.columns else 0
-        )
+
+    st.session_state.point_scored = st.session_state.point_scored + 1
+
     st.switch_page("pages/w_point_type.py")
 
+#punto subito
 if st.button("Point lost"):
-    st.session_state.df.loc[st.session_state.current_row, "score"] = "Point lost"
-    
-    # Verifica che la riga precedente esista e aggiorna i punteggi
-    if st.session_state.current_row > 0 and st.session_state.current_row - 1 in st.session_state.df.index:
-        st.session_state.df.loc[st.session_state.current_row, "opp_score"] = (
-            st.session_state.df.loc[st.session_state.current_row - 1, "opp_score"] + 1
-        )
-        st.session_state.df.loc[st.session_state.current_row, "our_score"] = (
-            st.session_state.df.loc[st.session_state.current_row - 1, "our_score"]
-        )
-    else:
-        # Usa i valori esistenti se disponibili, altrimenti inizializza
-        st.session_state.df.loc[st.session_state.current_row, "opp_score"] = (
-            st.session_state.df["opp_score"].max() + 1 if "opp_score" in st.session_state.df.columns else 1
-        )
-        st.session_state.df.loc[st.session_state.current_row, "our_score"] = (
-            st.session_state.df["our_score"].max() if "our_score" in st.session_state.df.columns else 0
-        )
+
+    st.session_state.point_lost = st.session_state.point_lost + 1
+
     st.switch_page("pages/l_player.py")
 
+#elimina ultimo punto salvato
+if st.button("Delete last point"):
+
+    if st.session_state.current_row != 0 :
+
+        st.session_state.df.loc[st.session_state.current_row-1,"score"]= None
+        st.session_state.df.loc[st.session_state.current_row-1,"point_type"]= None
+        st.session_state.df.loc[st.session_state.current_row-1,"player"]= None
+        st.session_state.df.loc[st.session_state.current_row-1,"attack_zone"]= None
+        st.session_state.df.loc[st.session_state.current_row-1,"serve_zone"]= None
+        st.session_state.df.loc[st.session_state.current_row-1,"defense_zone"]= None
+        st.session_state.df.loc[st.session_state.current_row-1,"block_zone"]= None
+        st.session_state.df.loc[st.session_state.current_row-1,"out_zone"]= None
+        st.session_state.df.loc[st.session_state.current_row-1,"our_score"]= None
+        st.session_state.df.loc[st.session_state.current_row-1,"opp_score"]= None
+
+        st.session_state.current_row = st.session_state.current_row -1
+        
+#show df
+st.dataframe(st.session_state.df)
 # Aggiungi un pulsante "Next Set"
 st.subheader("Start the next set")
 
+#passa al prossimo set
 if st.button("Next Set"):
-    # Incrementa il numero del set corrente
-    #if "current_set" not in st.session_state:
-        #st.session_state.current_set = 1  # Inizializza il primo set
-    #else:
-    st.session_state.current_set += 1
+    
+    if st.session_state.n_set <=5:
 
-    # Salva il foglio corrente nel file Excel
-    file_name = f"Match_{st.session_state.date_str}.xlsx"
-    try:
-        with pd.ExcelWriter(file_name, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
-            # Salva tutte le colonne del DataFrame nel foglio corrente
-            st.session_state.df.to_excel(writer, index=False, sheet_name=f"Set {st.session_state.current_set-1}") 
-        st.success(f"Set {st.session_state.current_set-1} salvato nel file Excel: {file_name}")
-    except Exception as e:
-        st.error(f"Errore durante il salvataggio del file Excel: {e}")
+        if st.session_state.n_set == 1 :
 
-    # Azzera il DataFrame per il nuovo set, con punteggi iniziali a zero
-    st.session_state.df = pd.DataFrame(columns=["score", "point_type", "player", "attack_zone", "serve_zone", "defense_zone", "block_zone", "out_zone", "our_score", "opp_score"])
-    st.session_state.df.loc[0] = ["", "", "", "", "", "", "", "", 0, 0]
+            st.session_state.set1 = st.session_state.df
 
-    st.info(f"Pronto per il Set {st.session_state.current_set}!")
+            st.session_state.df = pd.DataFrame({
+                "score": [None],
+                "point_type": [None],
+                "player": [None],
+                "attack_zone": [None],
+                "serve_zone": [None],
+                "defense_zone": [None],
+                "block_zone": [None],
+                "out_zone": [None],
+                "our_score": [None],  # Inizializza con 0
+                "opp_score": [None],  # Inizializza con 0
+            })
 
-# Salva il foglio "Set 1" (ex "Game Report")
-st.subheader("The game is concluded? Save and download the report, after adding optional comments")
+            st.session_state.point_scored = 0
+            st.session_state.point_lost = 0
+            st.session_state.n_set = 2
+            st.session_state.current_row = 0
+        
+        if st.session_state.n_set == 2 :
 
-text_input = st.text_input(
-    "Post-match hot takes",
-    key="placeholder",
-)
+            st.session_state.set2 = st.session_state.df
+
+            st.session_state.df = pd.DataFrame({
+                "score": [None],
+                "point_type": [None],
+                "player": [None],
+                "attack_zone": [None],
+                "serve_zone": [None],
+                "defense_zone": [None],
+                "block_zone": [None],
+                "out_zone": [None],
+                "our_score": [None],  # Inizializza con 0
+                "opp_score": [None],  # Inizializza con 0
+            })
+
+            st.session_state.point_scored = 0
+            st.session_state.point_lost = 0
+            st.session_state.n_set = 3
+            st.session_state.current_row = 0
+
+        if st.session_state.n_set == 3 :
+
+            st.session_state.set3 = st.session_state.df
+
+            st.session_state.df = pd.DataFrame({
+                "score": [None],
+                "point_type": [None],
+                "player": [None],
+                "attack_zone": [None],
+                "serve_zone": [None],
+                "defense_zone": [None],
+                "block_zone": [None],
+                "out_zone": [None],
+                "our_score": [None],  # Inizializza con 0
+                "opp_score": [None],  # Inizializza con 0
+            })
+
+            st.session_state.point_scored = 0
+            st.session_state.point_lost = 0
+            st.session_state.n_set = 4
+            st.session_state.current_row = 0
+
+        if st.session_state.n_set == 4 :
+
+            st.session_state.set4 = st.session_state.df
+
+            st.session_state.df = pd.DataFrame({
+                "score": [None],
+                "point_type": [None],
+                "player": [None],
+                "attack_zone": [None],
+                "serve_zone": [None],
+                "defense_zone": [None],
+                "block_zone": [None],
+                "out_zone": [None],
+                "our_score": [None],  # Inizializza con 0
+                "opp_score": [None],  # Inizializza con 0
+            })
+
+            st.session_state.point_scored = 0
+            st.session_state.point_lost = 0
+            st.session_state.n_set = 5
+            st.session_state.current_row = 0
+        
+        if st.session_state.n_set == 5 :
+
+            st.session_state.set5 = st.session_state.df
+
+            st.session_state.df = pd.DataFrame({
+                "score": [None],
+                "point_type": [None],
+                "player": [None],
+                "attack_zone": [None],
+                "serve_zone": [None],
+                "defense_zone": [None],
+                "block_zone": [None],
+                "out_zone": [None],
+                "our_score": [None],  # Inizializza con 0
+                "opp_score": [None],  # Inizializza con 0
+            })
+
+            st.session_state.point_scored = 0
+            st.session_state.point_lost = 0
+            st.session_state.current_row = 0
+        
+        else:
+            st.error("Reached maximum number of sets!")
+        
+    
+
 
 if st.button("Save Game Report"):
-    # Inizializza current_set se non esiste
-    if "current_set" not in st.session_state:
-        st.session_state.current_set = 1  # Inizializza il primo set
-
+   
     file_name = f"Match_{st.session_state.date_str}.xlsx"
     
-    # Verifica se il file esiste
+    #salva tutti i set sul file excel
     try:
-        with pd.ExcelWriter(file_name, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
-            # Salva tutte le colonne del DataFrame nel foglio corrente
-            st.session_state.df.to_excel(writer, index=False, sheet_name=f"Set {st.session_state.current_set}")
+        with pd.ExcelWriter(file_name, engine='openpyxl', mode='w', if_sheet_exists='overlay') as writer:
             
-            # Aggiungi un nuovo foglio "comments" con il contenuto del text_input
-            comments_df = pd.DataFrame({"Comments": [st.session_state.placeholder]})
-            comments_df.to_excel(writer, index=False, sheet_name="Comments")
-        
+            st.session_state.info_df.to_excel(writer, index=False, sheet_name="Info")
+            st.session_state.set1.to_excel(writer, index=False, sheet_name="Set 1")
+            st.session_state.set2.to_excel(writer, index=False, sheet_name="Set 2")
+            st.session_state.set3.to_excel(writer, index=False, sheet_name="Set 3")
+            st.session_state.set4.to_excel(writer, index=False, sheet_name="Set 4")
+            st.session_state.set5.to_excel(writer, index=False, sheet_name="Set 5")
+            
+    
         st.success(f"Set {st.session_state.current_set} e commenti salvati nel file Excel: {file_name}")
     except Exception as e:
         st.error(f"Errore durante il salvataggio del file Excel: {e}")
+    
 
-# Verifica se il file Excel esiste e lo carica nel buffer per il download
-file_name = f"Match_{st.session_state.date_str}.xlsx"
+    try:
+        with open(file_name, "rb") as f:
+            buffer = io.BytesIO(f.read())  # Legge il contenuto del file salvato in memoria
+    except FileNotFoundError:
+        st.error(f"Il file {file_name} non esiste. Assicurati di salvarlo prima di scaricarlo.")
+    else:
+        # Button per il download del file excel
+        st.download_button(
+            label="Download the Excel file",
+            data=buffer,
+            file_name=file_name,
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
-try:
-    with open(file_name, "rb") as f:
-        buffer = io.BytesIO(f.read())  # Legge il contenuto del file salvato in memoria
-except FileNotFoundError:
-    st.error(f"Il file {file_name} non esiste. Assicurati di salvarlo prima di scaricarlo.")
-else:
-    # Button per il download del file excel
-    st.download_button(
-        label="Download the Excel file",
-        data=buffer,
-        file_name=file_name,
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+
+#bottone ritorno 
+if st.button(":house:"):
+    st.session_state.point_scored = 0
+    st.session_state.point_lost = 0
+    st.session_state.n_set = 1
+    st.switch_page('pages/start.py')
