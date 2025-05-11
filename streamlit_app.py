@@ -17,6 +17,7 @@ st.set_page_config(page_title='Volleyball report app DV4S', initial_sidebar_stat
 
 # Inizializza tutti i "session state"
 
+
 if "info_df" not in st.session_state:
     st.session_state.info_df = pd.DataFrame()
 
