@@ -164,6 +164,12 @@ if st.button("Save Game Report"):
     if st.session_state.n_set == 5:
         st.session_state.set5 = st.session_state.df
     
+    if st.session_state.n_set == 4:
+        st.session_state.set4 = st.session_state.df
+
+    if st.session_state.n_set == 3:
+        st.session_state.set3 = st.session_state.df
+    
 
     file_name = f"Match_{st.session_state.date_str}.xlsx"
     
