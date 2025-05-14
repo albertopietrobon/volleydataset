@@ -128,7 +128,7 @@ if st.session_state.step == 2:
     else:
         st.session_state.df.loc[st.session_state.current_row, "out_zone"] = None
 
-    if 'block_net' in st.session_state.point_block:
+    if 'block_net' in st.session_state.point_def:
         st.session_state.df.loc[st.session_state.current_row, "block_zone"] = st.session_state.point_def
     else:
         st.session_state.df.loc[st.session_state.current_row, "block_zone"] = None
