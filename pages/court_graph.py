@@ -37,44 +37,71 @@ focus = all_match1[all_match1['player'] == st.session_state.player]
 
 #points/errors/both and fundamental
 if st.session_state.fundamental_type == "attack":
-    focus = focus[focus['attack_zone'].notna()]
+
+    focus_att = focus[focus['attack_zone'].notna()]
+
     st.session_state.info_type = st.segmented_control("Choose the type of parameter:", ['points','errors','both'])
-    if st.session_state.info_type == "points":
-        focus = focus[focus['score'] == 'S']
-    elif st.session_state.info_type == "errors":
-        focus = focus[focus['score'] == 'L']
-        focus = focus[focus['point_type'] == 'team error']
-    else:
-        focus = focus
-elif st.session_state.fundamental_type == "serve":
-    focus = focus[focus['serve_zone'].notna()]
-elif st.session_state.fundamental_type == "block":
-    focus = focus[focus['block_zone'].notna()]
     
-elif st.session_state.info_type == "errors":
-     focus = focus[focus['score'] == 'L']
-     if st.session_state.fundamental_type == "attack":
-        focus = focus[focus['attack_zone'].notna()]
-     elif st.session_state.fundamental_type == "serve":
-        focus = focus[focus['serve_zone'].notna()]
-     elif st.session_state.fundamental_type == "block":
-        focus = focus[focus['block_zone'].notna()]
-     elif st.session_state.fundamental_type == "defense":
-        focus = focus[focus['defense_zone'].notna()]
+    if st.session_state.info_type == "points":
+        focus_att = focus_att[(focus_att['score'] == 'S') & (focus_att['point_type'] == 'team point')]
+        st.dataframe(focus_att)
+    elif st.session_state.info_type == "errors":
+        focus_att = focus_att[(focus_att['score'] == 'L') & (focus_att['point_type'] == 'team error')]
+        st.dataframe(focus_att)
+    else:
+        focus_att = focus_att[(focus_att['point_type'] == 'team error') | (focus_att['point_type'] == 'team point') ]
+        st.dataframe(focus_att)
+   
+if st.session_state.fundamental_type == "serve":
 
-else:
-    focus = focus
+    focus_serve = focus[focus['serve_zone'].notna()]
 
+    st.session_state.info_type = st.segmented_control("Choose the type of parameter:", ['points','errors','both'])
+    
+    if st.session_state.info_type == "points":
+        focus_serve = focus_serve[(focus_serve['score'] == 'S') & (focus_serve['point_type'] == 'team point')]
+        st.dataframe(focus_serve)
+    elif st.session_state.info_type == "errors":
+        focus_serve = focus_serve[(focus_serve['score'] == 'L') & (focus_serve['point_type'] == 'team error')]
+        st.dataframe(focus_serve)
+    else:
+        focus_serve = focus_serve[(focus_serve['point_type'] == 'team error') | (focus_serve['point_type'] == 'team point') ]
+        st.dataframe(focus_serve)
 
-if st.session_state.fundamental_type == "attack":
-    focus = focus[focus['attack_zone'].notna()]
-elif st.session_state.fundamental_type == "serve":
-    focus = focus[focus['serve_zone'].notna()]
-elif st.session_state.fundamental_type == "block":
-    focus = focus[focus['block_zone'].notna()]
-elif st.session_state.fundamental_type == "defense":
-    focus = focus[focus['defense_zone'].notna()]
+if st.session_state.fundamental_type == "block":
 
+    focus_block = focus[focus['block_zone'].notna()]
 
+    st.session_state.info_type = st.segmented_control("Choose the type of parameter:", ['points','errors','both'])
+    
+    if st.session_state.info_type == "points":
+        focus_block = focus_block[(focus_block['score'] == 'S') & (focus_block['point_type'] == 'team point')]
+        st.dataframe(focus_block)
+    elif st.session_state.info_type == "errors":
+        focus_block = focus_block[(focus_block['score'] == 'L') & (focus_block['point_type'] == 'opp point')]
+        st.dataframe(focus_block)
+    else:
+        focus_block = focus_block[(focus_block['point_type'] == 'opp point') | (focus_block['point_type'] == 'team point') ]
+        st.dataframe(focus_block)
 
-st.dataframe(focus)
+if st.session_state.fundamental_type == "defense":
+
+    focus_defense = focus[focus['defense_zone'].notna()]
+
+    st.session_state.info_type = st.segmented_control("Choose the type of parameter:", 'errors')
+    
+    if st.session_state.info_type == "errors":
+        focus_defense = focus_defense[(focus_defense['score'] == 'L') & (focus_defense['point_type'] == 'opp point') & (focus_defense['attack_zone'].notna())]
+        st.dataframe(focus_defense)
+    
+if st.session_state.fundamental_type == "receive":
+
+    focus_receive = focus[focus['defense_zone'].notna()]
+
+    st.session_state.info_type = st.segmented_control("Choose the type of parameter:", 'errors')
+    
+    if st.session_state.info_type == "errors":
+        focus_receive = focus_receive[(focus_receive['score'] == 'L') & (focus_receive['point_type'] == 'opp point') & (focus_receive['serve_zone'].notna())]
+        st.dataframe(focus_receive)
+    
+
