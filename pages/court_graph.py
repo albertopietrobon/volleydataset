@@ -767,7 +767,7 @@ if st.session_state.fundamental_type == "attack":
 
         att = att.dropna(subset=['end_att']).astype(int)
         att = att.reset_index(drop=True)
-        st.dataframe(att)
+        
         #crea vettore con frequenza zone di attacco
         frequenza_attacchi = att['start_att'].value_counts(normalize=True).sort_index().reindex(range(1, 7), fill_value=0)
         frequenza_difese = att['end_att'].value_counts(normalize=True).sort_index().reindex(range(1, 9), fill_value=0)
@@ -850,8 +850,7 @@ if st.session_state.fundamental_type == "serve":
 
         serve = serve.dropna(subset=['end_serve']).astype(int)
         serve = serve.reset_index(drop=True)
-        st.dataframe(focus_serve)
-        st.dataframe(serve)
+        
         #crea vettore con frequenza zone di attacco
         frequenza_servizi = serve['start_serve'].value_counts(normalize=True).sort_index().reindex(range(1, 7), fill_value=0)
         frequenza_ace = serve['end_serve'].value_counts(normalize=True).sort_index().reindex(range(1, 9), fill_value=0)
