@@ -35,8 +35,8 @@ if new_game:
 
     st.switch_page("pages/data.py")
 
-#if game_history:
-#    st.switch_page("pages/?.py")
+if game_history:
+    st.switch_page("pages/team_stats.py")
 
-#if player_stats:
-#    st.switch_page("pages/?.py")
+if player_stats:
+   st.switch_page("pages/player_stats.py")

@@ -11,9 +11,10 @@ w_court_page = st.Page('pages/w_court.py', title='w_court')
 l_court_opp_point_page = st.Page('pages/l_court_opp_point.py', title='l_court_opp_point')
 l_court_team_error_page = st.Page('pages/l_court_team_error.py', title='l_court_team_error')
 start_page = st.Page('pages/start.py', title='start')
-court_graph = st.Page('pages/court_graph.py', title='court_graph')
+player_stats = st.Page('pages/player_stats.py', title='player_stats')
+team_stats = st.Page('pages/team_stats.py', title='team_stats')
 
-pg = st.navigation([court_graph,start_page, data_page, score_page, w_point_type_page, l_point_type_page, w_player_page, l_player_page, w_court_page, l_court_opp_point_page, l_court_team_error_page], position='sidebar')
+pg = st.navigation([team_stats,player_stats,start_page, data_page, score_page, w_point_type_page, l_point_type_page, w_player_page, l_player_page, w_court_page, l_court_opp_point_page, l_court_team_error_page], position='sidebar')
 st.set_page_config(page_title='Volleyball report app DV4S', initial_sidebar_state='collapsed')
 
 # Inizializza tutti i "session state"
