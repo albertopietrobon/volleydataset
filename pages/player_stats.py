@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch
+import glob
+import plotly.graph_objects as go
 
 if "info_type" not in st.session_state:
     st.session_state.info_type = "errors"
@@ -980,36 +982,209 @@ def plot_volleyball_receive_frequency(attack_frequencies,defense_frequencies,tra
                         ax.add_patch(arrow)
         st.pyplot(fig) 
 
+def make_player_radar_chart(player_name, stats):
+    metrics = ['Att%','Serve%','Block%','Def error contribution','Rec error contribution','Att error contribution',
+               'Serve error contribution','Block error contribution','Att point contribution','Serve point contribution','Block point contribution']
+    values = [stats[metric] for metric in metrics]
+    values.append(values[0])  # Chiudi il radar plot
+    angles = metrics + [metrics[0]]  # Chiudi il radar plot
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatterpolar(
+        r=values,
+        theta=angles,
+        fill='toself',
+        name=player_name
+    ))
+
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 100]  # Percentuali da 0 a 100
+            )
+        ),
+        showlegend=True
+    )
+    return fig
+
+#home button
+#tabella con foto e caratteristiche variabile team (in streamlit_app.py)
+#radar_chart
+#tabella con performance generali
+#scatter plot con possibilità di scegliere i KPI degli assi e vedere le partite
+
+#DATA EXTRACTION
+excel_files = glob.glob("*.xlsx")
+
+excels = pd.DataFrame({})
+for file_names in excel_files:
+    excels[file_names] = pd.read_excel(file_names, sheet_name=None)
+
+#st.dataframe(excels['Match_2025-04-16.xlsx']['Set 1'])
 
 
 
-#DATA
 
-name1 = "datasets/Match_2025-04-16.xlsx"
+ 
+# name1 = "datasets/Match_2025-04-16.xlsx"
+#match1 = pd.read_excel(name1, sheet_name=None)
 
-match1 = pd.read_excel(name1, sheet_name=None)
-
-match1_info = match1['Info']
-match1_set1 = match1['Set 1']
-match1_set2 = match1['Set 2']
-match1_set3 = match1['Set 3']
-match1_set4 = match1['Set 4']
-match1_set5 = match1['Set 5']
-
-
-all_match1 = pd.concat([match1_set1,match1_set2,match1_set3,match1_set4,match1_set5])
+#match1_info = match1['Info']
+#match1_set1 = match1['Set 1']
+#match1_set2 = match1['Set 2']
+#match1_set3 = match1['Set 3']
+#match1_set4 = match1['Set 4']
+#match1_set5 = match1['Set 5']
 
 
+#all_match1 = pd.concat([match1_set1,match1_set2,match1_set3,match1_set4,match1_set5])
+
+#PLAYER SELECTION
 st.session_state.player = st.selectbox("Select a player:",st.session_state.roster['Name'])
-st.session_state.fundamental_type = st.segmented_control("Choose the type of fundamental:", ["attack","serve","block","defense","receive"])
 
 
-#filtering of the data presented based on player, points/errors/both, and fundamental
+immagine,dati = st.columns(2)
 
-#player
-focus = all_match1[all_match1['player'] == st.session_state.player]
+with immagine:
 
-#points/errors/both and fundamental
+    st.write("qui ci va la fotaaa")
+
+with dati:
+
+    tabella_dati = pd.DataFrame(st.session_state.roster)
+    tabella_dati = tabella_dati[tabella_dati['Name'] == st.session_state.player]
+
+    st.table(tabella_dati.T)
+
+
+
+
+
+
+
+
+
+
+
+st.session_state.fundamental_type = st.segmented_control("Choose the type of fundamental:", ["overall","attack","serve","block","defense","receive"])
+
+#focus = all_match1[all_match1['player'] == st.session_state.player]
+################################################################################################################
+player_stats = {
+        'Scored points': 0,
+        'Lost points': 0,
+        'Ace': 0,
+        'Attack points': 0,
+        'Block points': 0,
+        'Fouls': 0,
+        'Cards': 0,
+        'Defense errors': 0,
+        'Receive errors': 0,
+        'Attack errors': 0,
+        'Serve errors': 0,
+        'Block errors': 0,
+        'Att%': 0,
+        'Serve%': 0,
+        'Block%': 0,
+        'Def error contribution': 0,
+        'Rec error contribution': 0,
+        'Att error contribution': 0,
+        'Serve error contribution': 0,
+        'Block error contribution': 0,
+        'Att point contribution': 0,
+        'Serve point contribution': 0,
+        'Block point contribution': 0
+
+}
+
+team_stats = {
+    
+    'Ace': 0,
+    'Attack points': 0,
+    'Block points': 0,
+    'Defense errors': 0,
+    'Receive errors': 0,
+    'Attack errors': 0,
+    'Serve errors': 0,
+    'Block errors': 0,
+    
+}
+
+
+if st.session_state.fundamental_type == "overall":
+
+    
+
+    for file_names in excels:
+
+        match_info = excels[file_names]['Info']
+        match_set1 = excels[file_names]['Set 1']
+        match_set2 = excels[file_names]['Set 2']
+        match_set3 = excels[file_names]['Set 3']
+        match_set4 = excels[file_names]['Set 4']
+        match_set5 = excels[file_names]['Set 5']
+
+        all_match = pd.concat([match_set1,match_set2,match_set3,match_set4,match_set5])
+        all_match2 = pd.concat([match_set1,match_set2,match_set3,match_set4,match_set5])
+
+
+        #player stats
+        all_match = all_match[all_match['player'] == st.session_state.player]
+        
+
+        player_stats['Fouls'] += len(all_match[all_match['point_type']=='foul'])
+        player_stats['Cards'] += len(all_match[all_match['point_type']=='card'])
+        player_stats['Scored points'] += len(all_match[all_match['score']=='S'])
+        player_stats['Lost points'] += len(all_match[all_match['score']=='L'])
+        player_stats['Ace'] += len(all_match[(all_match['score']=='S') & (all_match['serve_zone'].notna())])
+        player_stats['Attack points'] += len(all_match[(all_match['score']=='S') & (all_match['attack_zone'].notna())])
+        player_stats['Block points'] += len(all_match[(all_match['score']=='S') & (all_match['block_zone'].notna())])
+        player_stats['Defense errors'] += len(all_match[(all_match['score']=='L') & (all_match['defense_zone'].notna()) & (all_match['attack_zone'].notna())])
+        player_stats['Receive errors'] += len(all_match[(all_match['score']=='L') & (all_match['defense_zone'].notna()) & (all_match['serve_zone'].notna())])
+        player_stats['Attack errors'] += len(all_match[(all_match['score']=='L') & (all_match['point_type'] == 'team error') & (all_match['attack_zone'].notna())])
+        player_stats['Serve errors'] += len(all_match[(all_match['score']=='L') & (all_match['point_type'] == 'team error') & (all_match['serve_zone'].notna())])
+        player_stats['Block errors'] += len(all_match[(all_match['score']=='L') & (all_match['point_type'] == 'opp point') & (all_match['block_zone'].notna())])
+
+        #team stats
+        all_match2 = all_match2[all_match2['player'].notna()]
+        team_stats['Ace'] += len(all_match2[(all_match2['score']=='S') & (all_match2['serve_zone'].notna())])
+        team_stats['Attack points'] += len(all_match2[(all_match2['score']=='S') & (all_match2['attack_zone'].notna())])
+        team_stats['Block points'] += len(all_match2[(all_match2['score']=='S') & (all_match2['block_zone'].notna())])
+        team_stats['Defense errors'] += len(all_match2[(all_match2['score']=='L') & (all_match2['defense_zone'].notna()) & (all_match2['attack_zone'].notna())])
+        team_stats['Receive errors'] += len(all_match2[(all_match2['score']=='L') & (all_match2['defense_zone'].notna()) & (all_match2['serve_zone'].notna())])
+        team_stats['Attack errors'] += len(all_match2[(all_match2['score']=='L') & (all_match2['point_type'] == 'team error') & (all_match2['attack_zone'].notna())])
+        team_stats['Serve errors'] += len(all_match2[(all_match2['score']=='L') & (all_match2['point_type'] == 'team error') & (all_match2['serve_zone'].notna())])
+        team_stats['Block errors'] += len(all_match2[(all_match2['score']=='L') & (all_match2['point_type'] == 'opp point') & (all_match2['block_zone'].notna())])
+
+
+
+    
+    player_stats['Att%'] =  player_stats['Attack points']/(player_stats['Attack points']+player_stats['Attack errors'])*100
+    player_stats['Serve%'] =  player_stats['Ace']/(player_stats['Ace']+player_stats['Serve errors'])*100
+    player_stats['Block%'] =  player_stats['Block points']/(player_stats['Block points']+player_stats['Block errors'])*100
+    player_stats['Def error contribution'] =  player_stats['Defense errors']/team_stats['Defense errors']*100
+    player_stats['Rec error contribution'] =  player_stats['Receive errors']/team_stats['Receive errors']*100
+    player_stats['Att error contribution'] =  player_stats['Attack errors']/team_stats['Attack errors']*100
+    player_stats['Serve error contribution'] =  player_stats['Serve errors']/team_stats['Serve errors']*100
+    player_stats['Block error contribution'] =  player_stats['Block errors']/team_stats['Block errors']*100
+    player_stats['Att point contribution'] =  player_stats['Attack points']/team_stats['Attack points']*100
+    player_stats['Serve point contribution'] =  player_stats['Ace']/team_stats['Ace']*100
+    player_stats['Block point contribution'] =  player_stats['Block points']/team_stats['Block points']*100
+    
+
+    col1,col2 = st.columns(2)
+    with col1:
+
+        radar_chart = make_player_radar_chart(st.session_state.player, player_stats)
+        st.plotly_chart(radar_chart)
+    
+    with col2:
+        player_stats = pd.DataFrame(player_stats, index = [0]).T
+        general_table = st.table(player_stats.head(7))
+      
+    
+
 
 ############################################################################################
 
