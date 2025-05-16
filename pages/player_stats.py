@@ -1255,7 +1255,6 @@ for dates in all_games:
     label = f"{all_games[dates]['Date']} : {all_games[dates]['Opponent']} {all_games[dates]['Final result']}"
     game_labels.append(label)
 game_labels.append('all games')
-st.write(game_labels)
 #################################################################################################à
 
 if st.session_state.fundamental_type == "overall":
@@ -1277,8 +1276,22 @@ if st.session_state.fundamental_type == "attack":
     
     st.session_state.game_choice = st.selectbox("Select a game:",game_labels, placeholder='Select a game...')
     
+    #caso di selezione di tutti i game
     if st.session_state.game_choice == 'all games':
-        st.write ('SECTION OF ALL GAMES')
+        
+        match_conc = pd.DataFrame()
+        for file_names in excels:
+        
+            match1 = excels[file_names]['Set 1']
+            match2 = excels[file_names]['Set 2']
+            match3 = excels[file_names]['Set 3']
+            match4 = excels[file_names]['Set 4']
+            match5 = excels[file_names]['Set 5']
+
+            match_conc = pd.concat([match_conc,match1,match2,match3,match4,match5])
+        
+        
+    #caso di selezione di game singolo
     else: 
 
         match_index = game_labels.index(st.session_state.game_choice)
@@ -1291,90 +1304,127 @@ if st.session_state.fundamental_type == "attack":
         match5 = match['Set 5']
 
         match_conc = pd.concat([match1,match2,match3,match4,match5])
+
+    #COURT CHART  
+    focus = match_conc[match_conc['player'] == st.session_state.player]
+    
+    focus_att = focus[focus['attack_zone'].notna()]
+
+    st.session_state.info_type = st.segmented_control("Choose the type of parameter:", ['points','errors'])
+    
+    if st.session_state.info_type == "points":
+        focus_att = focus_att[(focus_att['score'] == 'S') & (focus_att['point_type'] == 'team point')]
         
-        focus = match_conc[match_conc['player'] == st.session_state.player]
+        att = pd.DataFrame({
+            'start_att' : focus_att['attack_zone'].str.extract(r'att_(\d+)')[0].dropna().astype(int),
+            'end_att' : focus_att['defense_zone'].str.extract(r'def_(\d+)')[0].dropna().astype(int)
+
+        })
+        att = att.reset_index(drop=True)
+
+        #crea vettore con frequenza zone di attacco
+        frequenza_attacchi = att['start_att'].value_counts(normalize=True).sort_index().reindex(range(1, 7), fill_value=0)
+        frequenza_difese = att['end_att'].value_counts(normalize=True).sort_index().reindex(range(1, 11), fill_value=0)
+        frequenza_transizioni = pd.crosstab(att['start_att'], att['end_att'], normalize=True)
+
+
+        min_frequenza_threshold = st.slider(
+            "Soglia minima frequenza transizione:",
+            min_value=0.0,
+            max_value=frequenza_transizioni.max().max() if not frequenza_transizioni.empty else 0.1,
+            value=0.01,  # Valore predefinito
+            step=0.001,
+            format="%.3f"
+        )
+
+        # Esegui la funzione per visualizzare il grafico
+        plot_volleyball_attack_frequency(frequenza_attacchi,frequenza_difese,frequenza_transizioni, st.session_state.player, soglia_freq=min_frequenza_threshold)
+
+
+    elif st.session_state.info_type == "errors":
+        focus_att = focus_att[(focus_att['score'] == 'L') & (focus_att['point_type'] == 'team error')]
+        temp_index = pd.RangeIndex(len(focus_att))
+        focus_att = focus_att.set_axis(temp_index)
+
+        block_zone_extracted = focus_att['block_zone'].str.extract(r'block_net_(\d+)')[0].dropna().astype(int)
+
+        out_zone_mapping = {
+            'out_1': 1,
+            'out_5': 5,
+            'out_6': 6,
+            'out_left': 7, 
+            'out_right': 8 
+        }
+
+        out_zone_extracted_raw = focus_att['out_zone'].map(out_zone_mapping).dropna().astype(int, errors='ignore')
+
+        start_att = focus_att['attack_zone'].str.extract(r'att_(\d+)')[0].dropna().astype(int)
+
+        end_att_block = block_zone_extracted.reindex(start_att.index)
+        end_att_out = out_zone_extracted_raw.reindex(start_att.index)
+
+        end_att = pd.concat([end_att_block, end_att_out]).dropna().astype(int)
+        att = pd.DataFrame({'start_att': start_att, 'end_att': end_att})
+
+        att = att.dropna(subset=['end_att']).astype(int)
+        att = att.reset_index(drop=True)
         
-        focus_att = focus[focus['attack_zone'].notna()]
+        #crea vettore con frequenza zone di attacco
+        frequenza_attacchi = att['start_att'].value_counts(normalize=True).sort_index().reindex(range(1, 7), fill_value=0)
+        frequenza_difese = att['end_att'].value_counts(normalize=True).sort_index().reindex(range(1, 9), fill_value=0)
+        frequenza_transizioni = pd.crosstab(att['start_att'], att['end_att'], normalize=True)
+    
 
-        st.session_state.info_type = st.segmented_control("Choose the type of parameter:", ['points','errors'])
-        
-        if st.session_state.info_type == "points":
-            focus_att = focus_att[(focus_att['score'] == 'S') & (focus_att['point_type'] == 'team point')]
-            
-            att = pd.DataFrame({
-                'start_att' : focus_att['attack_zone'].str.extract(r'att_(\d+)')[0].dropna().astype(int),
-                'end_att' : focus_att['defense_zone'].str.extract(r'def_(\d+)')[0].dropna().astype(int)
+        min_frequenza_threshold = st.slider(
+            "Soglia minima frequenza transizione:",
+            min_value=0.0,
+            max_value=frequenza_transizioni.max().max() if not frequenza_transizioni.empty else 0.1,
+            value=0.01,  # Valore predefinito
+            step=0.001,
+            format="%.3f"
+        )
 
-            })
-            att = att.reset_index(drop=True)
-
-            #crea vettore con frequenza zone di attacco
-            frequenza_attacchi = att['start_att'].value_counts(normalize=True).sort_index().reindex(range(1, 7), fill_value=0)
-            frequenza_difese = att['end_att'].value_counts(normalize=True).sort_index().reindex(range(1, 11), fill_value=0)
-            frequenza_transizioni = pd.crosstab(att['start_att'], att['end_att'], normalize=True)
-
-
-            min_frequenza_threshold = st.slider(
-                "Soglia minima frequenza transizione:",
-                min_value=0.0,
-                max_value=frequenza_transizioni.max().max() if not frequenza_transizioni.empty else 0.1,
-                value=0.01,  # Valore predefinito
-                step=0.001,
-                format="%.3f"
-            )
-
-            # Esegui la funzione per visualizzare il grafico
-            plot_volleyball_attack_frequency(frequenza_attacchi,frequenza_difese,frequenza_transizioni, st.session_state.player, soglia_freq=min_frequenza_threshold)
-
-
-        elif st.session_state.info_type == "errors":
-            focus_att = focus_att[(focus_att['score'] == 'L') & (focus_att['point_type'] == 'team error')]
-            
-            block_zone_extracted = focus_att['block_zone'].str.extract(r'block_net_(\d+)')[0].dropna().astype(int)
-
-            out_zone_mapping = {
-                'out_1': 1,
-                'out_5': 5,
-                'out_6': 6,
-                'out_left': 7, 
-                'out_right': 8 
-            }
-
-            out_zone_extracted_raw = focus_att['out_zone'].map(out_zone_mapping).dropna().astype(int, errors='ignore')
-
-            start_att = focus_att['attack_zone'].str.extract(r'att_(\d+)')[0].dropna().astype(int)
-
-            end_att_block = block_zone_extracted.reindex(start_att.index)
-            end_att_out = out_zone_extracted_raw.reindex(start_att.index)
-
-            end_att = pd.concat([end_att_block, end_att_out]).dropna().astype(int)
-            att = pd.DataFrame({'start_att': start_att, 'end_att': end_att})
-
-            att = att.dropna(subset=['end_att']).astype(int)
-            att = att.reset_index(drop=True)
-            
-            #crea vettore con frequenza zone di attacco
-            frequenza_attacchi = att['start_att'].value_counts(normalize=True).sort_index().reindex(range(1, 7), fill_value=0)
-            frequenza_difese = att['end_att'].value_counts(normalize=True).sort_index().reindex(range(1, 9), fill_value=0)
-            frequenza_transizioni = pd.crosstab(att['start_att'], att['end_att'], normalize=True)
-        
-
-            min_frequenza_threshold = st.slider(
-                "Soglia minima frequenza transizione:",
-                min_value=0.0,
-                max_value=frequenza_transizioni.max().max() if not frequenza_transizioni.empty else 0.1,
-                value=0.01,  # Valore predefinito
-                step=0.001,
-                format="%.3f"
-            )
-
-            # Esegui la funzione per visualizzare il grafico
-            plot_volleyball_attack_frequency(frequenza_attacchi,frequenza_difese,frequenza_transizioni, st.session_state.player, soglia_freq=min_frequenza_threshold)
+        # Esegui la funzione per visualizzare il grafico
+        plot_volleyball_attack_frequency(frequenza_attacchi,frequenza_difese,frequenza_transizioni, st.session_state.player, soglia_freq=min_frequenza_threshold)
 
 #######################################################################################
 
 if st.session_state.fundamental_type == "serve":
 
+    st.session_state.game_choice = st.selectbox("Select a game:",game_labels, placeholder='Select a game...')
+    
+    #caso di selezione di tutti i game
+    if st.session_state.game_choice == 'all games':
+        
+        match_conc = pd.DataFrame()
+        for file_names in excels:
+        
+            match1 = excels[file_names]['Set 1']
+            match2 = excels[file_names]['Set 2']
+            match3 = excels[file_names]['Set 3']
+            match4 = excels[file_names]['Set 4']
+            match5 = excels[file_names]['Set 5']
+
+            match_conc = pd.concat([match_conc,match1,match2,match3,match4,match5])
+        
+        
+    #caso di selezione di game singolo
+    else: 
+
+        match_index = game_labels.index(st.session_state.game_choice)
+        match = excels.iloc[:,match_index]
+
+        match1 = match['Set 1']
+        match2 = match['Set 2']
+        match3 = match['Set 3']
+        match4 = match['Set 4']
+        match5 = match['Set 5']
+
+        match_conc = pd.concat([match1,match2,match3,match4,match5])
+
+    #COURT CHART  
+    focus = match_conc[match_conc['player'] == st.session_state.player]
+    
     focus_serve = focus[focus['serve_zone'].notna()]
 
     st.session_state.info_type = st.segmented_control("Choose the type of parameter:", ['points','errors'])
@@ -1388,7 +1438,7 @@ if st.session_state.fundamental_type == "serve":
 
         })
         serve = serve.reset_index(drop=True)
-        
+
         #crea vettore con frequenza zone di servizio
         frequenza_servizi = serve['start_serve'].value_counts(normalize=True).sort_index().reindex(range(1, 7), fill_value=0)
         frequenza_ace = serve['end_serve'].value_counts(normalize=True).sort_index().reindex(range(1, 11), fill_value=0)
@@ -1413,7 +1463,9 @@ if st.session_state.fundamental_type == "serve":
 
     elif st.session_state.info_type == "errors":
         focus_serve = focus_serve[(focus_serve['score'] == 'L') & (focus_serve['point_type'] == 'team error')]
-        
+        temp_index = pd.RangeIndex(len(focus_serve))
+        focus_serve = focus_serve.set_axis(temp_index)
+
         block_zone_extracted = focus_serve['block_zone'].str.extract(r'block_net_(\d+)')[0].dropna().astype(int)
 
         out_zone_mapping = {
@@ -1425,9 +1477,7 @@ if st.session_state.fundamental_type == "serve":
         }
 
         out_zone_extracted_raw = focus_serve['out_zone'].map(out_zone_mapping).dropna().astype(int, errors='ignore')
-
         start_serve = focus_serve['serve_zone'].str.extract(r'serve_(\d+)')[0].dropna().astype(int)
-
         end_serve_block = block_zone_extracted.reindex(start_serve.index)
         end_serve_out = out_zone_extracted_raw.reindex(start_serve.index)
 
@@ -1459,6 +1509,40 @@ if st.session_state.fundamental_type == "serve":
 
 if st.session_state.fundamental_type == "block":
 
+    st.session_state.game_choice = st.selectbox("Select a game:",game_labels, placeholder='Select a game...')
+    
+    #caso di selezione di tutti i game
+    if st.session_state.game_choice == 'all games':
+        
+        match_conc = pd.DataFrame()
+        for file_names in excels:
+        
+            match1 = excels[file_names]['Set 1']
+            match2 = excels[file_names]['Set 2']
+            match3 = excels[file_names]['Set 3']
+            match4 = excels[file_names]['Set 4']
+            match5 = excels[file_names]['Set 5']
+
+            match_conc = pd.concat([match_conc,match1,match2,match3,match4,match5])
+        
+        
+    #caso di selezione di game singolo
+    else: 
+
+        match_index = game_labels.index(st.session_state.game_choice)
+        match = excels.iloc[:,match_index]
+
+        match1 = match['Set 1']
+        match2 = match['Set 2']
+        match3 = match['Set 3']
+        match4 = match['Set 4']
+        match5 = match['Set 5']
+
+        match_conc = pd.concat([match1,match2,match3,match4,match5])
+
+    #COURT CHART  
+    focus = match_conc[match_conc['player'] == st.session_state.player]
+    
     focus_block = focus[focus['block_zone'].notna()]
 
     st.session_state.info_type = st.segmented_control("Choose the type of parameter:", ['points','errors'])
@@ -1499,6 +1583,40 @@ if st.session_state.fundamental_type == "block":
 
 if st.session_state.fundamental_type == "defense":
 
+    st.session_state.game_choice = st.selectbox("Select a game:",game_labels, placeholder='Select a game...')
+    
+    #caso di selezione di tutti i game
+    if st.session_state.game_choice == 'all games':
+        
+        match_conc = pd.DataFrame()
+        for file_names in excels:
+        
+            match1 = excels[file_names]['Set 1']
+            match2 = excels[file_names]['Set 2']
+            match3 = excels[file_names]['Set 3']
+            match4 = excels[file_names]['Set 4']
+            match5 = excels[file_names]['Set 5']
+
+            match_conc = pd.concat([match_conc,match1,match2,match3,match4,match5])
+        
+        
+    #caso di selezione di game singolo
+    else: 
+
+        match_index = game_labels.index(st.session_state.game_choice)
+        match = excels.iloc[:,match_index]
+
+        match1 = match['Set 1']
+        match2 = match['Set 2']
+        match3 = match['Set 3']
+        match4 = match['Set 4']
+        match5 = match['Set 5']
+
+        match_conc = pd.concat([match1,match2,match3,match4,match5])
+
+    #COURT CHART  
+    focus = match_conc[match_conc['player'] == st.session_state.player]
+
     focus_defense = focus[focus['defense_zone'].notna()]
 
     st.session_state.info_type = st.segmented_control("Choose the type of parameter:", 'errors')
@@ -1534,6 +1652,40 @@ if st.session_state.fundamental_type == "defense":
 ###################################################################################################ààà
     
 if st.session_state.fundamental_type == "receive":
+
+    st.session_state.game_choice = st.selectbox("Select a game:",game_labels, placeholder='Select a game...')
+    
+    #caso di selezione di tutti i game
+    if st.session_state.game_choice == 'all games':
+        
+        match_conc = pd.DataFrame()
+        for file_names in excels:
+        
+            match1 = excels[file_names]['Set 1']
+            match2 = excels[file_names]['Set 2']
+            match3 = excels[file_names]['Set 3']
+            match4 = excels[file_names]['Set 4']
+            match5 = excels[file_names]['Set 5']
+
+            match_conc = pd.concat([match_conc,match1,match2,match3,match4,match5])
+        
+        
+    #caso di selezione di game singolo
+    else: 
+
+        match_index = game_labels.index(st.session_state.game_choice)
+        match = excels.iloc[:,match_index]
+
+        match1 = match['Set 1']
+        match2 = match['Set 2']
+        match3 = match['Set 3']
+        match4 = match['Set 4']
+        match5 = match['Set 5']
+
+        match_conc = pd.concat([match1,match2,match3,match4,match5])
+
+    #COURT CHART  
+    focus = match_conc[match_conc['player'] == st.session_state.player]
 
     focus_receive = focus[focus['defense_zone'].notna()]
 
