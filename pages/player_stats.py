@@ -1024,7 +1024,7 @@ for file_names in excel_files:
     excels[file_names] = pd.read_excel(file_names, sheet_name=None)
 
 #PLAYER SELECTION
-st.session_state.player = st.selectbox("Select a player:",st.session_state.roster['Name'])
+st.session_state.player = st.selectbox("Select a player:",st.session_state.roster['Name'], placeholder="Select a player...")
 
 #PLAYER DATA
 immagine,dati = st.columns(2)
@@ -1251,11 +1251,10 @@ st.session_state.fundamental_type = st.segmented_control("Choose the type of fun
 
 
 game_labels = []
-game_labels.append('all games')
 for dates in all_games:
     label = f"{all_games[dates]['Date']} : {all_games[dates]['Opponent']} {all_games[dates]['Final result']}"
     game_labels.append(label)
-
+game_labels.append('all games')
 st.write(game_labels)
 #################################################################################################à
 
@@ -1276,85 +1275,101 @@ if st.session_state.fundamental_type == "overall":
 
 if st.session_state.fundamental_type == "attack":
     
-    st.session_state.game_choice = st.selectbox("Select a game:",game_labels)
-
-
-    focus_att = focus[focus['attack_zone'].notna()]
-
-    st.session_state.info_type = st.segmented_control("Choose the type of parameter:", ['points','errors'])
+    st.session_state.game_choice = st.selectbox("Select a game:",game_labels, placeholder='Select a game...')
     
-    if st.session_state.info_type == "points":
-        focus_att = focus_att[(focus_att['score'] == 'S') & (focus_att['point_type'] == 'team point')]
+    if st.session_state.game_choice == 'all games':
+        st.write ('SECTION OF ALL GAMES')
+    else: 
+
+        match_index = game_labels.index(st.session_state.game_choice)
+        match = excels.iloc[:,match_index]
+
+        match1 = match['Set 1']
+        match2 = match['Set 2']
+        match3 = match['Set 3']
+        match4 = match['Set 4']
+        match5 = match['Set 5']
+
+        match_conc = pd.concat([match1,match2,match3,match4,match5])
         
-        att = pd.DataFrame({
-            'start_att' : focus_att['attack_zone'].str.extract(r'att_(\d+)')[0].dropna().astype(int),
-            'end_att' : focus_att['defense_zone'].str.extract(r'def_(\d+)')[0].dropna().astype(int)
-
-        })
-        att = att.reset_index(drop=True)
-
-        #crea vettore con frequenza zone di attacco
-        frequenza_attacchi = att['start_att'].value_counts(normalize=True).sort_index().reindex(range(1, 7), fill_value=0)
-        frequenza_difese = att['end_att'].value_counts(normalize=True).sort_index().reindex(range(1, 11), fill_value=0)
-        frequenza_transizioni = pd.crosstab(att['start_att'], att['end_att'], normalize=True)
-
-
-        min_frequenza_threshold = st.slider(
-            "Soglia minima frequenza transizione:",
-            min_value=0.0,
-            max_value=frequenza_transizioni.max().max() if not frequenza_transizioni.empty else 0.1,
-            value=0.01,  # Valore predefinito
-            step=0.001,
-            format="%.3f"
-        )
-
-        # Esegui la funzione per visualizzare il grafico
-        plot_volleyball_attack_frequency(frequenza_attacchi,frequenza_difese,frequenza_transizioni, st.session_state.player, soglia_freq=min_frequenza_threshold)
-
-
-    elif st.session_state.info_type == "errors":
-        focus_att = focus_att[(focus_att['score'] == 'L') & (focus_att['point_type'] == 'team error')]
+        focus = match_conc[match_conc['player'] == st.session_state.player]
         
-        block_zone_extracted = focus_att['block_zone'].str.extract(r'block_net_(\d+)')[0].dropna().astype(int)
+        focus_att = focus[focus['attack_zone'].notna()]
 
-        out_zone_mapping = {
-            'out_1': 1,
-            'out_5': 5,
-            'out_6': 6,
-            'out_left': 7, 
-            'out_right': 8 
-        }
-
-        out_zone_extracted_raw = focus_att['out_zone'].map(out_zone_mapping).dropna().astype(int, errors='ignore')
-
-        start_att = focus_att['attack_zone'].str.extract(r'att_(\d+)')[0].dropna().astype(int)
-
-        end_att_block = block_zone_extracted.reindex(start_att.index)
-        end_att_out = out_zone_extracted_raw.reindex(start_att.index)
-
-        end_att = pd.concat([end_att_block, end_att_out]).dropna().astype(int)
-        att = pd.DataFrame({'start_att': start_att, 'end_att': end_att})
-
-        att = att.dropna(subset=['end_att']).astype(int)
-        att = att.reset_index(drop=True)
+        st.session_state.info_type = st.segmented_control("Choose the type of parameter:", ['points','errors'])
         
-        #crea vettore con frequenza zone di attacco
-        frequenza_attacchi = att['start_att'].value_counts(normalize=True).sort_index().reindex(range(1, 7), fill_value=0)
-        frequenza_difese = att['end_att'].value_counts(normalize=True).sort_index().reindex(range(1, 9), fill_value=0)
-        frequenza_transizioni = pd.crosstab(att['start_att'], att['end_att'], normalize=True)
-    
+        if st.session_state.info_type == "points":
+            focus_att = focus_att[(focus_att['score'] == 'S') & (focus_att['point_type'] == 'team point')]
+            
+            att = pd.DataFrame({
+                'start_att' : focus_att['attack_zone'].str.extract(r'att_(\d+)')[0].dropna().astype(int),
+                'end_att' : focus_att['defense_zone'].str.extract(r'def_(\d+)')[0].dropna().astype(int)
 
-        min_frequenza_threshold = st.slider(
-            "Soglia minima frequenza transizione:",
-            min_value=0.0,
-            max_value=frequenza_transizioni.max().max() if not frequenza_transizioni.empty else 0.1,
-            value=0.01,  # Valore predefinito
-            step=0.001,
-            format="%.3f"
-        )
+            })
+            att = att.reset_index(drop=True)
 
-        # Esegui la funzione per visualizzare il grafico
-        plot_volleyball_attack_frequency(frequenza_attacchi,frequenza_difese,frequenza_transizioni, st.session_state.player, soglia_freq=min_frequenza_threshold)
+            #crea vettore con frequenza zone di attacco
+            frequenza_attacchi = att['start_att'].value_counts(normalize=True).sort_index().reindex(range(1, 7), fill_value=0)
+            frequenza_difese = att['end_att'].value_counts(normalize=True).sort_index().reindex(range(1, 11), fill_value=0)
+            frequenza_transizioni = pd.crosstab(att['start_att'], att['end_att'], normalize=True)
+
+
+            min_frequenza_threshold = st.slider(
+                "Soglia minima frequenza transizione:",
+                min_value=0.0,
+                max_value=frequenza_transizioni.max().max() if not frequenza_transizioni.empty else 0.1,
+                value=0.01,  # Valore predefinito
+                step=0.001,
+                format="%.3f"
+            )
+
+            # Esegui la funzione per visualizzare il grafico
+            plot_volleyball_attack_frequency(frequenza_attacchi,frequenza_difese,frequenza_transizioni, st.session_state.player, soglia_freq=min_frequenza_threshold)
+
+
+        elif st.session_state.info_type == "errors":
+            focus_att = focus_att[(focus_att['score'] == 'L') & (focus_att['point_type'] == 'team error')]
+            
+            block_zone_extracted = focus_att['block_zone'].str.extract(r'block_net_(\d+)')[0].dropna().astype(int)
+
+            out_zone_mapping = {
+                'out_1': 1,
+                'out_5': 5,
+                'out_6': 6,
+                'out_left': 7, 
+                'out_right': 8 
+            }
+
+            out_zone_extracted_raw = focus_att['out_zone'].map(out_zone_mapping).dropna().astype(int, errors='ignore')
+
+            start_att = focus_att['attack_zone'].str.extract(r'att_(\d+)')[0].dropna().astype(int)
+
+            end_att_block = block_zone_extracted.reindex(start_att.index)
+            end_att_out = out_zone_extracted_raw.reindex(start_att.index)
+
+            end_att = pd.concat([end_att_block, end_att_out]).dropna().astype(int)
+            att = pd.DataFrame({'start_att': start_att, 'end_att': end_att})
+
+            att = att.dropna(subset=['end_att']).astype(int)
+            att = att.reset_index(drop=True)
+            
+            #crea vettore con frequenza zone di attacco
+            frequenza_attacchi = att['start_att'].value_counts(normalize=True).sort_index().reindex(range(1, 7), fill_value=0)
+            frequenza_difese = att['end_att'].value_counts(normalize=True).sort_index().reindex(range(1, 9), fill_value=0)
+            frequenza_transizioni = pd.crosstab(att['start_att'], att['end_att'], normalize=True)
+        
+
+            min_frequenza_threshold = st.slider(
+                "Soglia minima frequenza transizione:",
+                min_value=0.0,
+                max_value=frequenza_transizioni.max().max() if not frequenza_transizioni.empty else 0.1,
+                value=0.01,  # Valore predefinito
+                step=0.001,
+                format="%.3f"
+            )
+
+            # Esegui la funzione per visualizzare il grafico
+            plot_volleyball_attack_frequency(frequenza_attacchi,frequenza_difese,frequenza_transizioni, st.session_state.player, soglia_freq=min_frequenza_threshold)
 
 #######################################################################################
 
