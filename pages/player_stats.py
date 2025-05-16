@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch
 import glob
 import plotly.graph_objects as go
+import matplotlib.patches as patches
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 
 if "info_type" not in st.session_state:
     st.session_state.info_type = "errors"
@@ -1010,11 +1012,123 @@ def make_player_radar_chart(player_name, stats):
     )
     return fig
 
-#home button
-#tabella con foto e caratteristiche variabile team (in streamlit_app.py)
-#radar_chart
-#tabella con performance generali
-#scatter plot con possibilità di scegliere i KPI degli assi e vedere le partite
+def get_image(zoom_ball):
+    return OffsetImage(plt.imread("pallone_verde.png"), zoom=zoom_ball)  # Assicurati di avere "pallone_verde.png"
+def get_image2(zoom_ball):
+    return OffsetImage(plt.imread("pallone_grigio.png"), zoom=zoom_ball)  # Assicurati di avere "pallone_verde.png"
+def get_image3(zoom_ball):
+    return OffsetImage(plt.imread("pallone_rosso.png"), zoom=zoom_ball)  # Assicurati di avere "pallone_verde.png"
+def bar_plot_points(bar_att):
+    # Creazione delle posizioni x più interne
+        x_positions = np.linspace(0.5, len(bar_att) - 1.5, len(bar_att))  # Distribuisce le colonne con margine ai lati
+
+        # Creazione del grafico
+        fig, ax = plt.subplots(figsize=(8, 6))
+
+        for idx, (x, row) in enumerate(zip(x_positions, bar_att.itertuples())):
+            points = row[2]  # Punti medi
+            errors = row[3]
+
+            int_points = int(points)  # Parte intera dei punti
+            frac_points = points - int_points  # Parte frazionaria
+            int_errors = int(errors)  # Parte intera degli errori
+            frac_errors = errors - int_errors  # Parte frazionaria
+            max_value = int(max(max(bar_att["Mean points x set"]), max(bar_att["Mean errors x set"]))) + 3
+            zoom_ball = 3.3723*(max_value)**(-0.968)
+            
+            # Disegna i palloni interi usando l'immagine
+            for y in range(1, int_points + 1):
+                ab = AnnotationBbox(get_image(zoom_ball), (x, y-0.5), frameon=False, zorder=3)
+                ax.add_artist(ab)
+                ax.text(x, int_points + 1, f"{points:.1f}", ha='center', fontsize=12, fontweight='bold', zorder=3)
+
+            # Se ci sono decimali, aggiungi il pallone tagliato
+            if frac_points > 0:
+                ab = AnnotationBbox(get_image(zoom_ball), (x, int_points + 0.5), frameon=False,zorder=3)
+                ax.add_artist(ab)
+                ax.add_patch(plt.Rectangle((x-0.5 , int_points+ frac_points), 0.9, 1, color='white', zorder=4))
+                ax.text(x, int_points + frac_points + 1, f"{points:.1f}", ha='center', fontsize=12, fontweight='bold', zorder= 5)
+            
+            # Disegna i palloni interi usando l'immagine
+            for y in range(1, int_errors + 1):
+                ab = AnnotationBbox(get_image2(zoom_ball), (x+0.1, y-0.5), frameon=False, zorder=0)
+                ax.add_artist(ab)
+                
+            # Se ci sono decimali, aggiungi il pallone tagliato
+            if frac_errors > 0:
+                ab = AnnotationBbox(get_image2(zoom_ball), (x+0.1, int_errors + 0.5), frameon=False, zorder=0)
+                ax.add_artist(ab)
+                ax.add_patch(plt.Rectangle((x-0.4, int_errors+ frac_errors), 1, 1, color='white', zorder=1))
+                
+        
+            
+        # Configurazione degli assi
+        ax.set_xticks(x_positions)
+        ax.set_xticklabels(bar_att["Set"])
+        ax.set_yticks(range(1, int(max(max(bar_att["Mean points x set"]), max(bar_att["Mean errors x set"]))) + 4))
+        ax.set_ylabel("Mean points per set")
+        #ax.set_xlabel("Set")
+        #ax.set_title("Distribuzione dei punti medi per set (con palloni spostati verso l'interno)")
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        st.pyplot(fig)
+def bar_plot_errors(bar_att):
+    # Creazione delle posizioni x più interne
+        x_positions = np.linspace(0.5, len(bar_att) - 1.5, len(bar_att))  # Distribuisce le colonne con margine ai lati
+
+        # Creazione del grafico
+        fig, ax = plt.subplots(figsize=(8, 6))
+
+        for idx, (x, row) in enumerate(zip(x_positions, bar_att.itertuples())):
+            points = row[2]  # Punti medi
+            errors = row[3]
+
+            int_points = int(points)  # Parte intera dei punti
+            frac_points = points - int_points  # Parte frazionaria
+            int_errors = int(errors)  # Parte intera degli errori
+            frac_errors = errors - int_errors  # Parte frazionaria
+            
+            max_value = int(max(max(bar_att["Mean points x set"]), max(bar_att["Mean errors x set"]))) + 3
+            zoom_ball = 3.3723*(max_value)**(-0.968)
+
+            # Disegna i palloni interi usando l'immagine
+            for y in range(1, int_points + 1):
+                ab = AnnotationBbox(get_image2(zoom_ball), (x, y-0.5), frameon=False, zorder = 0)
+                ax.add_artist(ab)
+                
+            # Se ci sono decimali, aggiungi il pallone tagliato
+            if frac_points > 0:
+                ab = AnnotationBbox(get_image2(zoom_ball), (x, int_points + 0.5), frameon=False, zorder = 0)
+                ax.add_artist(ab)
+                ax.add_patch(plt.Rectangle((x-0.5, int_points+ frac_points), 1, 1, color='white', zorder = 1))
+                
+            # Disegna i palloni interi usando l'immagine
+            for y in range(1, int_errors + 1):
+                ab = AnnotationBbox(get_image3(zoom_ball), (x+0.1, y-0.5), frameon=False, zorder = 3)
+                ax.add_artist(ab)
+                ax.text(x+0.1, int_errors + 1, f"{errors:.1f}", ha='center', fontsize=12, fontweight='bold', zorder=3)
+
+                
+            # Se ci sono decimali, aggiungi il pallone tagliato
+            if frac_errors > 0:
+                ab = AnnotationBbox(get_image3(zoom_ball), (x+0.1, int_errors + 0.5), frameon=False, zorder = 3)
+                ax.add_artist(ab)
+                ax.add_patch(plt.Rectangle((x-0.4, int_errors+ frac_errors), 0.9, 1, color='white', zorder=4))
+                ax.text(x+0.1, int_errors + 1, f"{errors:.1f}", ha='center', fontsize=12, fontweight='bold', zorder=5)
+
+        
+            
+        # Configurazione degli assi
+        ax.set_xticks(x_positions)
+        ax.set_xticklabels(bar_att["Set"])
+        ax.set_yticks(range(1, int(max(max(bar_att["Mean points x set"]), max(bar_att["Mean errors x set"]))) + 4))
+        ax.set_ylabel("Mean errors per set")
+        #ax.set_xlabel("Set")
+        #ax.set_title("Distribuzione dei punti medi per set (con palloni spostati verso l'interno)")
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        st.pyplot(fig)
+
 
 #DATA EXTRACTION 1
 excel_files = glob.glob("*.xlsx")
@@ -1280,6 +1394,18 @@ if st.session_state.fundamental_type == "attack":
     if st.session_state.game_choice == 'all games':
         
         match_conc = pd.DataFrame()
+        set1 = pd.DataFrame()
+        set2 = pd.DataFrame()
+        set3 = pd.DataFrame()
+        set4 = pd.DataFrame()
+        set5 = pd.DataFrame()
+
+        n1 = 0
+        n2 = 0
+        n3 = 0
+        n4 = 0
+        n5 = 0
+        
         for file_names in excels:
         
             match1 = excels[file_names]['Set 1']
@@ -1289,10 +1415,37 @@ if st.session_state.fundamental_type == "attack":
             match5 = excels[file_names]['Set 5']
 
             match_conc = pd.concat([match_conc,match1,match2,match3,match4,match5])
-        
+            set1 = pd.concat([set1,match1])
+            set2 = pd.concat([set2,match2])
+            set3 = pd.concat([set3,match3])
+            set4 = pd.concat([set4,match4])
+            set5 = pd.concat([set5,match5])
+
+            if not match1.empty:
+                n1 +=1
+            if not match2.empty:
+                n2 +=1
+            if not match3.empty:
+                n3 +=1
+            if not match4.empty:
+                n4 +=1
+            if not match5.empty:
+                n5 +=1
+    
         
     #caso di selezione di game singolo
     else: 
+        set1 = pd.DataFrame()
+        set2 = pd.DataFrame()
+        set3 = pd.DataFrame()
+        set4 = pd.DataFrame()
+        set5 = pd.DataFrame()
+        
+        n1 = 1
+        n2 = 1
+        n3 = 1
+        n4 = 1
+        n5 = 1
 
         match_index = game_labels.index(st.session_state.game_choice)
         match = excels.iloc[:,match_index]
@@ -1304,8 +1457,14 @@ if st.session_state.fundamental_type == "attack":
         match5 = match['Set 5']
 
         match_conc = pd.concat([match1,match2,match3,match4,match5])
+        set1 = match1
+        set2 = match2
+        set3 = match3
+        set4 = match4
+        set5 = match5
 
-    #COURT CHART  
+
+    #CHARTS
     focus = match_conc[match_conc['player'] == st.session_state.player]
     
     focus_att = focus[focus['attack_zone'].notna()]
@@ -1313,6 +1472,8 @@ if st.session_state.fundamental_type == "attack":
     st.session_state.info_type = st.segmented_control("Choose the type of parameter:", ['points','errors'])
     
     if st.session_state.info_type == "points":
+
+        #COURT CHART
         focus_att = focus_att[(focus_att['score'] == 'S') & (focus_att['point_type'] == 'team point')]
         
         att = pd.DataFrame({
@@ -1339,13 +1500,86 @@ if st.session_state.fundamental_type == "attack":
 
         # Esegui la funzione per visualizzare il grafico
         plot_volleyball_attack_frequency(frequenza_attacchi,frequenza_difese,frequenza_transizioni, st.session_state.player, soglia_freq=min_frequenza_threshold)
+        
+
+        #BAR CHART
+        set1_att = set1[set1['player'] == st.session_state.player]
+        att_p1 = len(set1_att[(set1_att['point_type'] == 'team point') & (set1_att['attack_zone'].notna())])
+        if n1 !=0:
+            att_p1 = att_p1/n1
+        else:
+            att_p1 = 0
+        set2_att = set2[set2['player'] == st.session_state.player]
+        att_p2 = len(set2_att[(set2_att['point_type'] == 'team point') & (set2_att['attack_zone'].notna())])
+        if n2 !=0:
+            att_p2 = att_p2/n2
+        else:
+            att_p2 = 0
+        set3_att = set3[set3['player'] == st.session_state.player]
+        att_p3 = len(set3_att[(set3_att['point_type'] == 'team point') & (set3_att['attack_zone'].notna())])
+        if n3 !=0:
+            att_p3 = att_p3/n3
+        else:
+            att_p3 = 0
+        set4_att = set4[set4['player'] == st.session_state.player]
+        att_p4 = len(set4_att[(set4_att['point_type'] == 'team point') & (set4_att['attack_zone'].notna())])
+        if n4 !=0:
+            att_p4 = att_p4/n4
+        else:
+            att_p4 = 0
+        set5_att = set5[set5['player'] == st.session_state.player]
+        att_p5 = len(set5_att[(set5_att['point_type'] == 'team point') & (set5_att['attack_zone'].notna())])
+        if n5 !=0:
+            att_p5 = att_p5/n5
+        else:
+            att_p5 = 0
+
+    
+        att_e1 = len(set1_att[(set1_att['point_type'] == 'team error') & (set1_att['attack_zone'].notna())])
+        if n1 !=0:
+            att_e1 = att_e1/n1
+        else:
+            att_e1 = 0
+        att_e2 = len(set2_att[(set2_att['point_type'] == 'team error') & (set2_att['attack_zone'].notna())])
+        if n2 !=0:
+            att_e2 = att_e2/n2
+        else:
+            att_e2 = 0
+        att_e3 = len(set3_att[(set3_att['point_type'] == 'team error') & (set3_att['attack_zone'].notna())])
+        if n3 !=0:
+            att_e3 = att_e3/n3
+        else:
+            att_e3 = 0
+        att_e4 = len(set4_att[(set4_att['point_type'] == 'team error') & (set4_att['attack_zone'].notna())])
+        if n4 !=0:
+            att_e4 = att_e4/n4
+        else:
+            att_e4 = 0
+        att_e5 = len(set5_att[(set5_att['point_type'] == 'team error') & (set5_att['attack_zone'].notna())])
+        if n5 !=0:
+            att_e5 = att_e5/n5
+        else:
+            att_e5 = 0
+        
+        bar_att = pd.DataFrame({
+            'Set': ['set 1', 'set 2', 'set 3', 'set 4', 'set 5'],
+            'Mean points x set' : [att_p1, att_p2, att_p3, att_p4, att_p5],
+            'Mean errors x set' : [att_e1, att_e2, att_e3, att_e4, att_e5],
+        })
+
+        bar_plot_points(bar_att)
+
+        
+
 
 
     elif st.session_state.info_type == "errors":
+
+        #COURT CHART
         focus_att = focus_att[(focus_att['score'] == 'L') & (focus_att['point_type'] == 'team error')]
         temp_index = pd.RangeIndex(len(focus_att))
         focus_att = focus_att.set_axis(temp_index)
-
+        
         block_zone_extracted = focus_att['block_zone'].str.extract(r'block_net_(\d+)')[0].dropna().astype(int)
 
         out_zone_mapping = {
@@ -1386,6 +1620,74 @@ if st.session_state.fundamental_type == "attack":
 
         # Esegui la funzione per visualizzare il grafico
         plot_volleyball_attack_frequency(frequenza_attacchi,frequenza_difese,frequenza_transizioni, st.session_state.player, soglia_freq=min_frequenza_threshold)
+        
+
+        #BAR CHART
+        set1_att = set1[set1['player'] == st.session_state.player]
+        att_p1 = len(set1_att[(set1_att['point_type'] == 'team point') & (set1_att['attack_zone'].notna())])
+        if n1 !=0:
+            att_p1 = att_p1/n1
+        else:
+            att_p1 = 0
+        set2_att = set2[set2['player'] == st.session_state.player]
+        att_p2 = len(set2_att[(set2_att['point_type'] == 'team point') & (set2_att['attack_zone'].notna())])
+        if n2 !=0:
+            att_p2 = att_p2/n2
+        else:
+            att_p2 = 0
+        set3_att = set3[set3['player'] == st.session_state.player]
+        att_p3 = len(set3_att[(set3_att['point_type'] == 'team point') & (set3_att['attack_zone'].notna())])
+        if n3 !=0:
+            att_p3 = att_p3/n3
+        else:
+            att_p3 = 0
+        set4_att = set4[set4['player'] == st.session_state.player]
+        att_p4 = len(set4_att[(set4_att['point_type'] == 'team point') & (set4_att['attack_zone'].notna())])
+        if n4 !=0:
+            att_p4 = att_p4/n4
+        else:
+            att_p4 = 0
+        set5_att = set5[set5['player'] == st.session_state.player]
+        att_p5 = len(set5_att[(set5_att['point_type'] == 'team point') & (set5_att['attack_zone'].notna())])
+        if n5 !=0:
+            att_p5 = att_p5/n5
+        else:
+            att_p5 = 0
+
+    
+        att_e1 = len(set1_att[(set1_att['point_type'] == 'team error') & (set1_att['attack_zone'].notna())])
+        if n1 !=0:
+            att_e1 = att_e1/n1
+        else:
+            att_e1 = 0
+        att_e2 = len(set2_att[(set2_att['point_type'] == 'team error') & (set2_att['attack_zone'].notna())])
+        if n2 !=0:
+            att_e2 = att_e2/n2
+        else:
+            att_e2 = 0
+        att_e3 = len(set3_att[(set3_att['point_type'] == 'team error') & (set3_att['attack_zone'].notna())])
+        if n3 !=0:
+            att_e3 = att_e3/n3
+        else:
+            att_e3 = 0
+        att_e4 = len(set4_att[(set4_att['point_type'] == 'team error') & (set4_att['attack_zone'].notna())])
+        if n4 !=0:
+            att_e4 = att_e4/n4
+        else:
+            att_e4 = 0
+        att_e5 = len(set5_att[(set5_att['point_type'] == 'team error') & (set5_att['attack_zone'].notna())])
+        if n5 !=0:
+            att_e5 = att_e5/n5
+        else:
+            att_e5 = 0
+        
+        bar_att = pd.DataFrame({
+            'Set': ['set 1', 'set 2', 'set 3', 'set 4', 'set 5'],
+            'Mean points x set' : [att_p1, att_p2, att_p3, att_p4, att_p5],
+            'Mean errors x set' : [att_e1, att_e2, att_e3, att_e4, att_e5],
+        })
+
+        bar_plot_errors(bar_att)
 
 #######################################################################################
 
@@ -1397,6 +1699,18 @@ if st.session_state.fundamental_type == "serve":
     if st.session_state.game_choice == 'all games':
         
         match_conc = pd.DataFrame()
+        set1 = pd.DataFrame()
+        set2 = pd.DataFrame()
+        set3 = pd.DataFrame()
+        set4 = pd.DataFrame()
+        set5 = pd.DataFrame()
+
+        n1 = 0
+        n2 = 0
+        n3 = 0
+        n4 = 0
+        n5 = 0
+        
         for file_names in excels:
         
             match1 = excels[file_names]['Set 1']
@@ -1406,10 +1720,37 @@ if st.session_state.fundamental_type == "serve":
             match5 = excels[file_names]['Set 5']
 
             match_conc = pd.concat([match_conc,match1,match2,match3,match4,match5])
-        
+            set1 = pd.concat([set1,match1])
+            set2 = pd.concat([set2,match2])
+            set3 = pd.concat([set3,match3])
+            set4 = pd.concat([set4,match4])
+            set5 = pd.concat([set5,match5])
+
+            if not match1.empty:
+                n1 +=1
+            if not match2.empty:
+                n2 +=1
+            if not match3.empty:
+                n3 +=1
+            if not match4.empty:
+                n4 +=1
+            if not match5.empty:
+                n5 +=1
+    
         
     #caso di selezione di game singolo
     else: 
+        set1 = pd.DataFrame()
+        set2 = pd.DataFrame()
+        set3 = pd.DataFrame()
+        set4 = pd.DataFrame()
+        set5 = pd.DataFrame()
+        
+        n1 = 1
+        n2 = 1
+        n3 = 1
+        n4 = 1
+        n5 = 1
 
         match_index = game_labels.index(st.session_state.game_choice)
         match = excels.iloc[:,match_index]
@@ -1421,6 +1762,11 @@ if st.session_state.fundamental_type == "serve":
         match5 = match['Set 5']
 
         match_conc = pd.concat([match1,match2,match3,match4,match5])
+        set1 = match1
+        set2 = match2
+        set3 = match3
+        set4 = match4
+        set5 = match5
 
     #COURT CHART  
     focus = match_conc[match_conc['player'] == st.session_state.player]
@@ -1456,7 +1802,74 @@ if st.session_state.fundamental_type == "serve":
 
         # Esegui la funzione per visualizzare il grafico
         plot_volleyball_serve_frequency(frequenza_servizi,frequenza_ace,frequenza_transizioni, st.session_state.player, soglia_freq=min_frequenza_threshold)
+        
 
+        #BAR CHART
+        set1_serve = set1[set1['player'] == st.session_state.player]
+        serve_p1 = len(set1_serve[(set1_serve['point_type'] == 'team point') & (set1_serve['serve_zone'].notna())])
+        if n1 !=0:
+            serve_p1 = serve_p1/n1
+        else:
+            serve_p1 = 0
+        set2_serve = set2[set2['player'] == st.session_state.player]
+        serve_p2 = len(set2_serve[(set2_serve['point_type'] == 'team point') & (set2_serve['serve_zone'].notna())])
+        if n2 !=0:
+            serve_p2 = serve_p2/n2
+        else:
+            serve_p2 = 0
+        set3_serve = set3[set3['player'] == st.session_state.player]
+        serve_p3 = len(set3_serve[(set3_serve['point_type'] == 'team point') & (set3_serve['serve_zone'].notna())])
+        if n3 !=0:
+            serve_p3 = serve_p3/n3
+        else:
+            serve_p3 = 0
+        set4_serve = set4[set4['player'] == st.session_state.player]
+        serve_p4 = len(set4_serve[(set4_serve['point_type'] == 'team point') & (set4_serve['serve_zone'].notna())])
+        if n4 !=0:
+            serve_p4 = serve_p4/n4
+        else:
+            serve_p4 = 0
+        set5_serve = set5[set5['player'] == st.session_state.player]
+        serve_p5 = len(set5_serve[(set5_serve['point_type'] == 'team point') & (set5_serve['serve_zone'].notna())])
+        if n5 !=0:
+            serve_p5 = serve_p5/n5
+        else:
+            serve_p5 = 0
+
+    
+        serve_e1 = len(set1_serve[(set1_serve['point_type'] == 'team error') & (set1_serve['serve_zone'].notna())])
+        if n1 !=0:
+            serve_e1 = serve_e1/n1
+        else:
+            serve_e1 = 0
+        serve_e2 = len(set2_serve[(set2_serve['point_type'] == 'team error') & (set2_serve['serve_zone'].notna())])
+        if n2 !=0:
+            serve_e2 = serve_e2/n2
+        else:
+            serve_e2 = 0
+        serve_e3 = len(set3_serve[(set3_serve['point_type'] == 'team error') & (set3_serve['serve_zone'].notna())])
+        if n3 !=0:
+            serve_e3 = serve_e3/n3
+        else:
+            serve_e3 = 0
+        serve_e4 = len(set4_serve[(set4_serve['point_type'] == 'team error') & (set4_serve['serve_zone'].notna())])
+        if n4 !=0:
+            serve_e4 = serve_e4/n4
+        else:
+            serve_e4 = 0
+        serve_e5 = len(set5_serve[(set5_serve['point_type'] == 'team error') & (set5_serve['serve_zone'].notna())])
+        if n5 !=0:
+            serve_e5 = serve_e5/n5
+        else:
+            serve_e5 = 0
+        
+        bar_serve = pd.DataFrame({
+            'Set': ['set 1', 'set 2', 'set 3', 'set 4', 'set 5'],
+            'Mean points x set' : [serve_p1, serve_p2, serve_p3, serve_p4, serve_p5],
+            'Mean errors x set' : [serve_e1, serve_e2, serve_e3, serve_e4, serve_e5],
+        })
+
+        bar_plot_points(bar_serve)
 
 
 
@@ -1504,7 +1917,76 @@ if st.session_state.fundamental_type == "serve":
 
         # Esegui la funzione per visualizzare il grafico
         plot_volleyball_serve_frequency(frequenza_servizi,frequenza_ace,frequenza_transizioni, st.session_state.player, soglia_freq=min_frequenza_threshold)
+        
+
+
+        #BAR CHART
+        set1_serve = set1[set1['player'] == st.session_state.player]
+        serve_p1 = len(set1_serve[(set1_serve['point_type'] == 'team point') & (set1_serve['serve_zone'].notna())])
+        if n1 !=0:
+            serve_p1 = serve_p1/n1
+        else:
+            serve_p1 = 0
+        set2_serve = set2[set2['player'] == st.session_state.player]
+        serve_p2 = len(set2_serve[(set2_serve['point_type'] == 'team point') & (set2_serve['serve_zone'].notna())])
+        if n2 !=0:
+            serve_p2 = serve_p2/n2
+        else:
+            serve_p2 = 0
+        set3_serve = set3[set3['player'] == st.session_state.player]
+        serve_p3 = len(set3_serve[(set3_serve['point_type'] == 'team point') & (set3_serve['serve_zone'].notna())])
+        if n3 !=0:
+            serve_p3 = serve_p3/n3
+        else:
+            serve_p3 = 0
+        set4_serve = set4[set4['player'] == st.session_state.player]
+        serve_p4 = len(set4_serve[(set4_serve['point_type'] == 'team point') & (set4_serve['serve_zone'].notna())])
+        if n4 !=0:
+            serve_p4 = serve_p4/n4
+        else:
+            serve_p4 = 0
+        set5_serve = set5[set5['player'] == st.session_state.player]
+        serve_p5 = len(set5_serve[(set5_serve['point_type'] == 'team point') & (set5_serve['serve_zone'].notna())])
+        if n5 !=0:
+            serve_p5 = serve_p5/n5
+        else:
+            serve_p5 = 0
+
     
+        serve_e1 = len(set1_serve[(set1_serve['point_type'] == 'team error') & (set1_serve['serve_zone'].notna())])
+        if n1 !=0:
+            serve_e1 = serve_e1/n1
+        else:
+            serve_e1 = 0
+        serve_e2 = len(set2_serve[(set2_serve['point_type'] == 'team error') & (set2_serve['serve_zone'].notna())])
+        if n2 !=0:
+            serve_e2 = serve_e2/n2
+        else:
+            serve_e2 = 0
+        serve_e3 = len(set3_serve[(set3_serve['point_type'] == 'team error') & (set3_serve['serve_zone'].notna())])
+        if n3 !=0:
+            serve_e3 = serve_e3/n3
+        else:
+            serve_e3 = 0
+        serve_e4 = len(set4_serve[(set4_serve['point_type'] == 'team error') & (set4_serve['serve_zone'].notna())])
+        if n4 !=0:
+            serve_e4 = serve_e4/n4
+        else:
+            serve_e4 = 0
+        serve_e5 = len(set5_serve[(set5_serve['point_type'] == 'team error') & (set5_serve['serve_zone'].notna())])
+        if n5 !=0:
+            serve_e5 = serve_e5/n5
+        else:
+            serve_e5 = 0
+        
+        bar_serve = pd.DataFrame({
+            'Set': ['set 1', 'set 2', 'set 3', 'set 4', 'set 5'],
+            'Mean points x set' : [serve_p1, serve_p2, serve_p3, serve_p4, serve_p5],
+            'Mean errors x set' : [serve_e1, serve_e2, serve_e3, serve_e4, serve_e5],
+        })
+
+        bar_plot_errors(bar_serve)
+
 ######################################################################################
 
 if st.session_state.fundamental_type == "block":
@@ -1515,6 +1997,18 @@ if st.session_state.fundamental_type == "block":
     if st.session_state.game_choice == 'all games':
         
         match_conc = pd.DataFrame()
+        set1 = pd.DataFrame()
+        set2 = pd.DataFrame()
+        set3 = pd.DataFrame()
+        set4 = pd.DataFrame()
+        set5 = pd.DataFrame()
+
+        n1 = 0
+        n2 = 0
+        n3 = 0
+        n4 = 0
+        n5 = 0
+        
         for file_names in excels:
         
             match1 = excels[file_names]['Set 1']
@@ -1524,10 +2018,37 @@ if st.session_state.fundamental_type == "block":
             match5 = excels[file_names]['Set 5']
 
             match_conc = pd.concat([match_conc,match1,match2,match3,match4,match5])
-        
+            set1 = pd.concat([set1,match1])
+            set2 = pd.concat([set2,match2])
+            set3 = pd.concat([set3,match3])
+            set4 = pd.concat([set4,match4])
+            set5 = pd.concat([set5,match5])
+
+            if not match1.empty:
+                n1 +=1
+            if not match2.empty:
+                n2 +=1
+            if not match3.empty:
+                n3 +=1
+            if not match4.empty:
+                n4 +=1
+            if not match5.empty:
+                n5 +=1
+    
         
     #caso di selezione di game singolo
     else: 
+        set1 = pd.DataFrame()
+        set2 = pd.DataFrame()
+        set3 = pd.DataFrame()
+        set4 = pd.DataFrame()
+        set5 = pd.DataFrame()
+        
+        n1 = 1
+        n2 = 1
+        n3 = 1
+        n4 = 1
+        n5 = 1
 
         match_index = game_labels.index(st.session_state.game_choice)
         match = excels.iloc[:,match_index]
@@ -1539,6 +2060,11 @@ if st.session_state.fundamental_type == "block":
         match5 = match['Set 5']
 
         match_conc = pd.concat([match1,match2,match3,match4,match5])
+        set1 = match1
+        set2 = match2
+        set3 = match3
+        set4 = match4
+        set5 = match5
 
     #COURT CHART  
     focus = match_conc[match_conc['player'] == st.session_state.player]
@@ -1561,6 +2087,73 @@ if st.session_state.fundamental_type == "block":
         # Esegui la funzione per visualizzare il grafico
         plot_volleyball_block_frequency(frequenza_blocchi, st.session_state.player)
 
+
+        #BAR CHART
+        set1_block = set1[set1['player'] == st.session_state.player]
+        block_p1 = len(set1_block[(set1_block['point_type'] == 'team point') & (set1_block['block_zone'].notna())])
+        if n1 !=0:
+            block_p1 = block_p1/n1
+        else:
+            block_p1 = 0
+        set2_block = set2[set2['player'] == st.session_state.player]
+        block_p2 = len(set2_block[(set2_block['point_type'] == 'team point') & (set2_block['block_zone'].notna())])
+        if n2 !=0:
+            block_p2 = block_p2/n2
+        else:
+            block_p2 = 0
+        set3_block = set3[set3['player'] == st.session_state.player]
+        block_p3 = len(set3_block[(set3_block['point_type'] == 'team point') & (set3_block['block_zone'].notna())])
+        if n3 !=0:
+            block_p3 = block_p3/n3
+        else:
+            block_p3 = 0
+        set4_block = set4[set4['player'] == st.session_state.player]
+        block_p4 = len(set4_block[(set4_block['point_type'] == 'team point') & (set4_block['block_zone'].notna())])
+        if n4 !=0:
+            block_p4 = block_p4/n4
+        else:
+            block_p4 = 0
+        set5_block = set5[set5['player'] == st.session_state.player]
+        block_p5 = len(set5_block[(set5_block['point_type'] == 'team point') & (set5_block['block_zone'].notna())])
+        if n5 !=0:
+            block_p5 = block_p5/n5
+        else:
+            block_p5 = 0
+
+    
+        block_e1 = len(set1_block[(set1_block['point_type'] == 'opp point') & (set1_block['block_zone'].notna())])
+        if n1 !=0:
+            block_e1 = block_e1/n1
+        else:
+            block_e1 = 0
+        block_e2 = len(set2_block[(set2_block['point_type'] == 'opp point') & (set2_block['block_zone'].notna())])
+        if n2 !=0:
+            block_e2 = block_e2/n2
+        else:
+            block_e2 = 0
+        block_e3 = len(set3_block[(set3_block['point_type'] == 'opp point') & (set3_block['block_zone'].notna())])
+        if n3 !=0:
+            block_e3 = block_e3/n3
+        else:
+            block_e3 = 0
+        block_e4 = len(set4_block[(set4_block['point_type'] == 'opp point') & (set4_block['block_zone'].notna())])
+        if n4 !=0:
+            block_e4 = block_e4/n4
+        else:
+            block_e4 = 0
+        block_e5 = len(set5_block[(set5_block['point_type'] == 'opp point') & (set5_block['block_zone'].notna())])
+        if n5 !=0:
+            block_e5 = block_e5/n5
+        else:
+            block_e5 = 0
+        
+        bar_block = pd.DataFrame({
+            'Set': ['set 1', 'set 2', 'set 3', 'set 4', 'set 5'],
+            'Mean points x set' : [block_p1, block_p2, block_p3, block_p4, block_p5],
+            'Mean errors x set' : [block_e1, block_e2, block_e3, block_e4, block_e5],
+        })
+
+        bar_plot_points(bar_block)
     
 
 
@@ -1578,6 +2171,74 @@ if st.session_state.fundamental_type == "block":
 
         # Esegui la funzione per visualizzare il grafico
         plot_volleyball_block_frequency(frequenza_blocchi, st.session_state.player)
+
+
+        #BAR CHART
+        set1_block = set1[set1['player'] == st.session_state.player]
+        block_p1 = len(set1_block[(set1_block['point_type'] == 'team point') & (set1_block['block_zone'].notna())])
+        if n1 !=0:
+            block_p1 = block_p1/n1
+        else:
+            block_p1 = 0
+        set2_block = set2[set2['player'] == st.session_state.player]
+        block_p2 = len(set2_block[(set2_block['point_type'] == 'team point') & (set2_block['block_zone'].notna())])
+        if n2 !=0:
+            block_p2 = block_p2/n2
+        else:
+            block_p2 = 0
+        set3_block = set3[set3['player'] == st.session_state.player]
+        block_p3 = len(set3_block[(set3_block['point_type'] == 'team point') & (set3_block['block_zone'].notna())])
+        if n3 !=0:
+            block_p3 = block_p3/n3
+        else:
+            block_p3 = 0
+        set4_block = set4[set4['player'] == st.session_state.player]
+        block_p4 = len(set4_block[(set4_block['point_type'] == 'team point') & (set4_block['block_zone'].notna())])
+        if n4 !=0:
+            block_p4 = block_p4/n4
+        else:
+            block_p4 = 0
+        set5_block = set5[set5['player'] == st.session_state.player]
+        block_p5 = len(set5_block[(set5_block['point_type'] == 'team point') & (set5_block['block_zone'].notna())])
+        if n5 !=0:
+            block_p5 = block_p5/n5
+        else:
+            block_p5 = 0
+
+    
+        block_e1 = len(set1_block[(set1_block['point_type'] == 'opp point') & (set1_block['block_zone'].notna())])
+        if n1 !=0:
+            block_e1 = block_e1/n1
+        else:
+            block_e1 = 0
+        block_e2 = len(set2_block[(set2_block['point_type'] == 'opp point') & (set2_block['block_zone'].notna())])
+        if n2 !=0:
+            block_e2 = block_e2/n2
+        else:
+            block_e2 = 0
+        block_e3 = len(set3_block[(set3_block['point_type'] == 'opp point') & (set3_block['block_zone'].notna())])
+        if n3 !=0:
+            block_e3 = block_e3/n3
+        else:
+            block_e3 = 0
+        block_e4 = len(set4_block[(set4_block['point_type'] == 'opp point') & (set4_block['block_zone'].notna())])
+        if n4 !=0:
+            block_e4 = block_e4/n4
+        else:
+            block_e4 = 0
+        block_e5 = len(set5_block[(set5_block['point_type'] == 'opp point') & (set5_block['block_zone'].notna())])
+        if n5 !=0:
+            block_e5 = block_e5/n5
+        else:
+            block_e5 = 0
+        
+        bar_block = pd.DataFrame({
+            'Set': ['set 1', 'set 2', 'set 3', 'set 4', 'set 5'],
+            'Mean points x set' : [block_p1, block_p2, block_p3, block_p4, block_p5],
+            'Mean errors x set' : [block_e1, block_e2, block_e3, block_e4, block_e5],
+        })
+
+        bar_plot_errors(bar_block)
 
 ###########################################################################################
 
