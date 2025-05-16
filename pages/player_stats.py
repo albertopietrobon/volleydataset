@@ -15,6 +15,8 @@ if "fundamental_type" not in st.session_state:
 if "player" not in st.session_state:
     st.session_state.player = "Paola Egonu"
 
+if "date_choice" not in st.session_state:
+    st.session_state.date_choice = "all"
 
 def plot_volleyball_attack_frequency(attack_frequencies,defense_frequencies,transizioni_frequenze, player_name="Giocatore",soglia_freq=0.01):
     
@@ -1014,36 +1016,17 @@ def make_player_radar_chart(player_name, stats):
 #tabella con performance generali
 #scatter plot con possibilità di scegliere i KPI degli assi e vedere le partite
 
-#DATA EXTRACTION
+#DATA EXTRACTION 1
 excel_files = glob.glob("*.xlsx")
 
 excels = pd.DataFrame({})
 for file_names in excel_files:
     excels[file_names] = pd.read_excel(file_names, sheet_name=None)
 
-#st.dataframe(excels['Match_2025-04-16.xlsx']['Set 1'])
-
-
-
-
- 
-# name1 = "datasets/Match_2025-04-16.xlsx"
-#match1 = pd.read_excel(name1, sheet_name=None)
-
-#match1_info = match1['Info']
-#match1_set1 = match1['Set 1']
-#match1_set2 = match1['Set 2']
-#match1_set3 = match1['Set 3']
-#match1_set4 = match1['Set 4']
-#match1_set5 = match1['Set 5']
-
-
-#all_match1 = pd.concat([match1_set1,match1_set2,match1_set3,match1_set4,match1_set5])
-
 #PLAYER SELECTION
 st.session_state.player = st.selectbox("Select a player:",st.session_state.roster['Name'])
 
-
+#PLAYER DATA
 immagine,dati = st.columns(2)
 
 with immagine:
@@ -1058,23 +1041,11 @@ with dati:
     st.table(tabella_dati.T)
 
 
-
-
-
-
-
-
-
-
-
-st.session_state.fundamental_type = st.segmented_control("Choose the type of fundamental:", ["overall","attack","serve","block","defense","receive"])
-
-#focus = all_match1[all_match1['player'] == st.session_state.player]
-################################################################################################################
+#STATS INIZIALIZATION
 player_stats = {
         'Scored points': 0,
         'Lost points': 0,
-        'Ace': 0,
+        'Aces': 0,
         'Attack points': 0,
         'Block points': 0,
         'Fouls': 0,
@@ -1100,7 +1071,7 @@ player_stats = {
 
 team_stats = {
     
-    'Ace': 0,
+    'Aces': 0,
     'Attack points': 0,
     'Block points': 0,
     'Defense errors': 0,
@@ -1111,20 +1082,89 @@ team_stats = {
     
 }
 
+all_games = {}
 
-if st.session_state.fundamental_type == "overall":
-
-    
-
-    for file_names in excels:
-
+#DATA EXTRACION 2
+for file_names in excels:
+        
         match_info = excels[file_names]['Info']
         match_set1 = excels[file_names]['Set 1']
         match_set2 = excels[file_names]['Set 2']
         match_set3 = excels[file_names]['Set 3']
         match_set4 = excels[file_names]['Set 4']
         match_set5 = excels[file_names]['Set 5']
+        
+        our_sets = 0
+        opp_sets = 0
+       
+        #game date
+        date = match_info.loc[1,'Data']
+        date_ok = date.strftime('%d-%m-%Y')
+        #opponent
+        opp = match_info.loc[1,'Opponent']
+        #final result
+        if not(match_set1.empty) and (match_set1.iloc[-1]['our_score'] > match_set1.iloc[-1]['opp_score']):
+            our_sets+=1
+            our_point_set1 = match_set1.iloc[-1]['our_score']
+            opp_point_set1 = match_set1.iloc[-1]['opp_score']
+        elif not(match_set1.empty) and (match_set1.iloc[-1]['our_score'] < match_set1.iloc[-1]['opp_score']):
+            opp_sets+=1
+            our_point_set1 = match_set1.iloc[-1]['our_score']
+            opp_point_set1 = match_set1.iloc[-1]['opp_score']
 
+        if not(match_set2.empty) and (match_set2.iloc[-1]['our_score'] > match_set2.iloc[-1]['opp_score']):
+            our_sets+=1
+            our_point_set2 = match_set2.iloc[-1]['our_score']
+            opp_point_set2 = match_set2.iloc[-1]['opp_score']
+        elif not(match_set2.empty) and (match_set2.iloc[-1]['our_score'] < match_set2.iloc[-1]['opp_score']):
+            opp_sets+=1
+            our_point_set2 = match_set2.iloc[-1]['our_score']
+            opp_point_set2 = match_set2.iloc[-1]['opp_score']
+
+        if not(match_set3.empty) and (match_set3.iloc[-1]['our_score'] > match_set3.iloc[-1]['opp_score']):
+            our_sets+=1
+            our_point_set3 = match_set3.iloc[-1]['our_score']
+            opp_point_set3 = match_set3.iloc[-1]['opp_score']
+        elif not(match_set3.empty) and (match_set3.iloc[-1]['our_score'] < match_set3.iloc[-1]['opp_score']) :
+            opp_sets+=1
+            our_point_set3 = match_set3.iloc[-1]['our_score']
+            opp_point_set3 = match_set3.iloc[-1]['opp_score']
+
+        if not(match_set4.empty) and (match_set4.iloc[-1]['our_score'] > match_set4.iloc[-1]['opp_score']) :
+            our_sets+=1
+            our_point_set4 = match_set4.iloc[-1]['our_score']
+            opp_point_set4 = match_set4.iloc[-1]['opp_score']
+        elif not(match_set4.empty) and (match_set4.iloc[-1]['our_score'] < match_set4.iloc[-1]['opp_score']) :
+            opp_sets+=1
+            our_point_set4 = match_set4.iloc[-1]['our_score']
+            opp_point_set4 = match_set4.iloc[-1]['opp_score']
+
+        if not(match_set5.empty) and (match_set5.iloc[-1]['our_score'] > match_set5.iloc[-1]['opp_score']):
+            our_sets+=1
+            our_point_set5 = match_set5.iloc[-1]['our_score']
+            opp_point_set5 = match_set5.iloc[-1]['opp_score']
+        elif not(match_set5.empty) and (match_set5.iloc[-1]['our_score'] < match_set5.iloc[-1]['opp_score']):
+            opp_sets+=1
+            our_point_set5 = match_set5.iloc[-1]['our_score']
+            opp_point_set5 = match_set5.iloc[-1]['opp_score']
+        
+        #game summary
+        all_games[date_ok] = {}
+        all_games[date_ok]['Date'] =  date_ok
+        all_games[date_ok]['Opponent'] = opp
+        all_games[date_ok]['Final result'] = [our_sets,opp_sets]
+        if not match_set5.empty :
+            all_games[date_ok]['Final points'] = [(our_point_set1,opp_point_set1), (our_point_set2,opp_point_set2),
+                                                (our_point_set3,opp_point_set3),(our_point_set4,opp_point_set4),(our_point_set5,opp_point_set5)]
+        elif not match_set4.empty and match_set5.empty :
+            all_games[date_ok]['Final points'] = [(our_point_set1,opp_point_set1), (our_point_set2,opp_point_set2),
+                                                (our_point_set3,opp_point_set3),(our_point_set4,opp_point_set4)]
+        else:
+            all_games[date_ok]['Final points'] = [(our_point_set1,opp_point_set1), (our_point_set2,opp_point_set2),
+                                                (our_point_set3,opp_point_set3)]
+        
+        
+        #player and team stats for overall
         all_match = pd.concat([match_set1,match_set2,match_set3,match_set4,match_set5])
         all_match2 = pd.concat([match_set1,match_set2,match_set3,match_set4,match_set5])
 
@@ -1137,7 +1177,7 @@ if st.session_state.fundamental_type == "overall":
         player_stats['Cards'] += len(all_match[all_match['point_type']=='card'])
         player_stats['Scored points'] += len(all_match[all_match['score']=='S'])
         player_stats['Lost points'] += len(all_match[all_match['score']=='L'])
-        player_stats['Ace'] += len(all_match[(all_match['score']=='S') & (all_match['serve_zone'].notna())])
+        player_stats['Aces'] += len(all_match[(all_match['score']=='S') & (all_match['serve_zone'].notna())])
         player_stats['Attack points'] += len(all_match[(all_match['score']=='S') & (all_match['attack_zone'].notna())])
         player_stats['Block points'] += len(all_match[(all_match['score']=='S') & (all_match['block_zone'].notna())])
         player_stats['Defense errors'] += len(all_match[(all_match['score']=='L') & (all_match['defense_zone'].notna()) & (all_match['attack_zone'].notna())])
@@ -1148,7 +1188,7 @@ if st.session_state.fundamental_type == "overall":
 
         #team stats
         all_match2 = all_match2[all_match2['player'].notna()]
-        team_stats['Ace'] += len(all_match2[(all_match2['score']=='S') & (all_match2['serve_zone'].notna())])
+        team_stats['Aces'] += len(all_match2[(all_match2['score']=='S') & (all_match2['serve_zone'].notna())])
         team_stats['Attack points'] += len(all_match2[(all_match2['score']=='S') & (all_match2['attack_zone'].notna())])
         team_stats['Block points'] += len(all_match2[(all_match2['score']=='S') & (all_match2['block_zone'].notna())])
         team_stats['Defense errors'] += len(all_match2[(all_match2['score']=='L') & (all_match2['defense_zone'].notna()) & (all_match2['attack_zone'].notna())])
@@ -1158,19 +1198,68 @@ if st.session_state.fundamental_type == "overall":
         team_stats['Block errors'] += len(all_match2[(all_match2['score']=='L') & (all_match2['point_type'] == 'opp point') & (all_match2['block_zone'].notna())])
 
 
-
-    
+if (player_stats['Attack points']+player_stats['Attack errors']) !=0:
     player_stats['Att%'] =  player_stats['Attack points']/(player_stats['Attack points']+player_stats['Attack errors'])*100
-    player_stats['Serve%'] =  player_stats['Ace']/(player_stats['Ace']+player_stats['Serve errors'])*100
+else:
+    player_stats['Att%'] = 0
+if (player_stats['Aces']+player_stats['Serve errors']) !=0:
+    player_stats['Serve%'] =  player_stats['Aces']/(player_stats['Aces']+player_stats['Serve errors'])*100
+else:
+    player_stats['Serve%'] = 0
+if (player_stats['Block points']+player_stats['Block errors']) !=0:
     player_stats['Block%'] =  player_stats['Block points']/(player_stats['Block points']+player_stats['Block errors'])*100
+else:
+    player_stats['Block%'] = 0
+if team_stats['Defense errors'] !=0:
     player_stats['Def error contribution'] =  player_stats['Defense errors']/team_stats['Defense errors']*100
+else:
+    player_stats['Def error contribution'] = 0
+if team_stats['Receive errors'] !=0:
     player_stats['Rec error contribution'] =  player_stats['Receive errors']/team_stats['Receive errors']*100
+else:
+    player_stats['Rec error contribution'] = 0
+if team_stats['Attack errors'] !=0:
     player_stats['Att error contribution'] =  player_stats['Attack errors']/team_stats['Attack errors']*100
+else:
+    player_stats['Att error contribution'] = 0
+if team_stats['Serve errors'] !=0:
     player_stats['Serve error contribution'] =  player_stats['Serve errors']/team_stats['Serve errors']*100
+else:
+    player_stats['Serve error contribution'] = 0
+if team_stats['Block errors'] !=0:
     player_stats['Block error contribution'] =  player_stats['Block errors']/team_stats['Block errors']*100
+else:
+    player_stats['Block error contribution'] = 0
+if team_stats['Attack points'] !=0:
     player_stats['Att point contribution'] =  player_stats['Attack points']/team_stats['Attack points']*100
-    player_stats['Serve point contribution'] =  player_stats['Ace']/team_stats['Ace']*100
+else:
+    player_stats['Att point contribution'] = 0
+if team_stats['Aces'] !=0:
+    player_stats['Serve point contribution'] =  player_stats['Aces']/team_stats['Aces']*100
+else:
+    player_stats['Serve point contribution'] = 0
+if team_stats['Block points'] !=0:
     player_stats['Block point contribution'] =  player_stats['Block points']/team_stats['Block points']*100
+else:
+    player_stats['Block point contribution'] = 0  
+
+
+
+
+#CHOICE OF WHAT TO SEE
+st.session_state.fundamental_type = st.segmented_control("Choose the type of fundamental:", ["overall","attack","serve","block","defense","receive"])
+
+
+game_labels = []
+game_labels.append('all games')
+for dates in all_games:
+    label = f"{all_games[dates]['Date']} : {all_games[dates]['Opponent']} {all_games[dates]['Final result']}"
+    game_labels.append(label)
+
+st.write(game_labels)
+#################################################################################################à
+
+if st.session_state.fundamental_type == "overall":
     
 
     col1,col2 = st.columns(2)
@@ -1183,12 +1272,12 @@ if st.session_state.fundamental_type == "overall":
         player_stats = pd.DataFrame(player_stats, index = [0]).T
         general_table = st.table(player_stats.head(7))
       
-    
-
-
 ############################################################################################
 
 if st.session_state.fundamental_type == "attack":
+    
+    st.session_state.game_choice = st.selectbox("Select a game:",game_labels)
+
 
     focus_att = focus[focus['attack_zone'].notna()]
 
