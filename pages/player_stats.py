@@ -7,6 +7,7 @@ import glob
 import plotly.graph_objects as go
 import matplotlib.patches as patches
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+from PIL import Image
 
 if "info_type" not in st.session_state:
     st.session_state.info_type = "errors"
@@ -1187,7 +1188,8 @@ immagine,dati = st.columns(2)
 
 with immagine:
 
-    st.write("qui ci va la fotaaa")
+    image = Image.open(f"{st.session_state.player}.jpg")
+    st.image(image)
 
 with dati:
 
