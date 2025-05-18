@@ -1313,6 +1313,11 @@ excels = pd.DataFrame({})
 for file_names in excel_files:
     excels[file_names] = pd.read_excel(file_names, sheet_name=None)
 
+back_button = st.button("Home")
+if back_button:
+    st.switch_page("pages/start.py")
+
+
 #PLAYER SELECTION
 st.session_state.player = st.selectbox("Select a player:",st.session_state.roster['Name'], placeholder="Select a player...")
 
