@@ -1837,6 +1837,22 @@ if st.session_state.fundamental_type == "attack":
         set4 = match4
         set5 = match5
 
+        #INSTANCE CHART
+        inst_df = match_conc.reset_index(drop=True)
+        temp_tot = inst_df[['our_score','opp_score']]
+        temp_tot = list(zip(temp_tot['our_score'], temp_tot['opp_score']))
+        temp_1 = list(zip(match1['our_score'], match1['opp_score']))
+        temp_2 = list(zip(match2['our_score'], match2['opp_score']))
+        temp_3 = list(zip(match3['our_score'], match3['opp_score']))
+        temp_4 = list(zip(match4['our_score'], match4['opp_score']))
+        temp_5 = list(zip(match5['our_score'], match5['opp_score']))
+
+
+
+
+
+
+
 
     #CHARTS
     focus = match_conc[match_conc['player'].notna()]
