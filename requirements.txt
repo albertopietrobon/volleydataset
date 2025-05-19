@@ -2,3 +2,7 @@ streamlit
 pandas
 openpyxl
 matplotlib
+plotly
+altair
+glob
+numpy
